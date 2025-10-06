@@ -1,5 +1,17 @@
-# Fichier SQL généré
+# Dépendances Node.js
+node_modules/
+
+# Variables d'environnement
+.env
+
+# Logs
+*.log
+
+# Fichiers sensibles / temporaires
+cookies.txt
 database_setup.sql
 
-# Fichier .env
-.env
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVT Job board</title>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <img src="EPI-LOGO-SIGNATURE-2018.png" alt="Logo du site" style="max-width: 150px; height: auto;">
+            </a>
+        </div>
+        <nav id="navbar">
+            <ul>
+                <li><a href="index.html">Accueil</a></li>
+            </ul>
+            <button type="button">Se connecter</button>
+            <button type="button">S'inscrire</button>
+        </nav>
+        <script>
+            // Forcer le rôle pour tester
+            localStorage.setItem("role", ""); // Change ici "candidate", "recruiter" ou "admin"
+
+            // Récupérer la valeur du rôle
+            const userRole = localStorage.getItem("role");
+
+            const navbar = document.getElementById("navbar");
+
+            if (userRole) {
+                let links = "";
+                if (userRole === "candidate") {
+                    links = `
+                        <ul>
+                            <li><a href="index.html">Accueil</a></li>
+                            <li><a href="profil.html">Trouver un job</a></li>
+                            <li><a href="entreprise.html">Trouver une entreprise</a></li>
+                        </ul>
+                        <div class="dropdown">
+                            <button class="dropbtn">Dropdown 
+                            <i class="fa fa-caret-down"></i>
+                            </button>
+                            <div class="dropdown-content">
+                                <a href="#">Informations personnelles</a>
+                                <a href="#">Mes candidatures</a>
+                            </div>
+                        </div> 
+                    `;
+                } else if (userRole === "recruiter") {
+                    links = `
+                        <ul>
+                            <li><a href="index.html">Accueil</a></li>
+                            <li><a href="gestion.html">Publier des offres d'emploi</a></li>
+                            <li><a href="candidats.html">Trouver des candidats</a></li>
+                        </ul>
+                        <div class="dropdown">
+                            <button class="dropbtn">Dropdown 
+                            <i class="fa fa-caret-down"></i>
+                            </button>
+                            <div class="dropdown-content">
+                                <a href="#">Informations entreprise</a>
+                                <a href="#">Mes offres publiées</a>
+                                <a href="#">Candidatures reçues</a>
+                            </div>
+                        </div>                     `;
+                } else if (userRole === "admin") {
+                    links = `
+                        <ul>
+                            <li><a href="index.html">Accueil</a></li>
+                            <li><a href="dashboard.html">Dashboard Admin</a></li>
+                            <li><a href="profil.html">Trouver un job</a></li>
+                            <li><a href="entreprise.html">Trouver une entreprise</a></li>
+                            <li><a href="candidats.html">Trouver des candidats</a></li>
+                            <li><a href="offres-publiees.html">Offres publiées</a></li>
+                        </ul>
+                    `;
+                }
+
+                // Remplacer le contenu de la navbar
+                navbar.innerHTML = links;
+            }
+        </script>
+
+    </header>
+</body>
+</html>

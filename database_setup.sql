@@ -30,7 +30,12 @@ CREATE TABLE companies (
 
 -- ================
 -- Table: people
--- (contacts & candidats)
+-- (candidats, recruteurs & admins)
+-- 
+-- Rôles et autorisations :
+-- • candidat   : consulte annonces, postule, gère son profil/candidatures
+-- • recruteur  : + crée/gère annonces de SON entreprise, voit candidatures à ses annonces
+-- • admin      : TOUT (CRUD complet, suppression users, gestion globale)
 -- ================
 CREATE TABLE people (
   person_id     INT PRIMARY KEY AUTO_INCREMENT,
@@ -40,7 +45,8 @@ CREATE TABLE people (
   password_hash VARCHAR(255),             -- si tu fais de l'auth, sinon nullable
   phone         VARCHAR(50),
   linkedin_url  VARCHAR(255),
-  person_type   ENUM('contact','candidat') DEFAULT 'candidat',
+  person_type   ENUM('candidat','recruteur','admin') DEFAULT 'candidat',
+  is_active     BOOLEAN DEFAULT TRUE,     -- pour désactiver un compte sans le supprimer
   company_id    INT NULL,
   position      VARCHAR(100),
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -56,7 +62,7 @@ CREATE TABLE people (
 CREATE TABLE advertisements (
   ad_id             INT PRIMARY KEY AUTO_INCREMENT,
   company_id        INT NOT NULL,
-  contact_person_id INT NULL,                   -- personne de type 'contact'
+  contact_person_id INT NULL,                   -- personne de type 'recruteur'
   job_title         VARCHAR(255) NOT NULL,
   job_description   TEXT,
   requirements      TEXT,

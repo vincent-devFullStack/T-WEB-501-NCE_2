@@ -16,34 +16,50 @@
             style="max-width: 150px; height: auto"
           />
         </a>
-        <nav id="navbar"><!-- rempli par JS --></nav>
+        <nav id="navbar"><!-- rempli par navbar.js --></nav>
       </div>
+    </header>
+
+    <section class="search-section">
       <form class="searchbar">
         <input
           type="text"
           placeholder="Intitulé, mot-clé, entreprise"
           name="keywords"
-        >
-        
+        />
+
         <input
           type="text"
           placeholder="Ville, région"
           name="location"
-        >
-        
+        />
+
         <div class="dropdown-check">
           <button type="button" class="dropbtn">Type de contrat ▼</button>
           <div class="dropdown-content">
-            <label><input type="checkbox" name="type[]" value="CDI"> CDI</label>
-            <label><input type="checkbox" name="type[]" value="CDD"> CDD</label>
-            <label><input type="checkbox" name="type[]" value="Stage"> Stage</label>
-            <label><input type="checkbox" name="type[]" value="Alternance"> Alternance</label>
-            <label><input type="checkbox" name="type[]" value="Intérim"> Intérim</label>
-            <label><input type="checkbox" name="type[]" value="Freelance"> Freelance</label>
+            <label><input type="checkbox" name="type[]" value="CDI" /> CDI</label>
+            <label><input type="checkbox" name="type[]" value="CDD" /> CDD</label>
+            <label><input type="checkbox" name="type[]" value="Stage" /> Stage</label>
+            <label><input type="checkbox" name="type[]" value="Alternance" /> Alternance</label>
+            <label><input type="checkbox" name="type[]" value="Intérim" /> Intérim</label>
+            <label><input type="checkbox" name="type[]" value="Freelance" /> Freelance</label>
           </div>
         </div>
-        
+
         <button type="submit" class="btn-search">Recherche</button>
       </form>
+    </section>
 
-    </header>
+    <!-- Section offres récentes -->
+    <main class="container">
+      <h2>Offres récentes</h2>
+      <div id="jobs-list" class="jobs-grid">
+        <!-- Les offres seront injectées ici par JavaScript -->
+      </div>
+    </main>
+
+    <!-- Scripts -->
+    <script type="module" src="/public/js/navbar.js"></script>
+    <script type="module" src="/public/js/load-jobs.js"></script>
+  </body>
+</html>

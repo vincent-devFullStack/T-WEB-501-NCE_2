@@ -21,7 +21,7 @@ const api = {
 export async function buildNavbar() {
   const el = document.getElementById("navbar");
 
-  let user = { name: "Test User", role: "admin" }; 
+  let user = { name: "Test User", role: "" }; 
 
   // let user = null;
 

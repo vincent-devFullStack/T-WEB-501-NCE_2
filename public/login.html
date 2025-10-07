@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Connexion / Inscription</title>
+    <link rel="stylesheet" href="style/main.css" />
+  </head>
+  <body>
+    <div class="auth-container">
+      <!-- Connexion -->
+      <form id="login-form" class="form">
+        <h2>Connexion</h2>
+
+        <label for="login-email">Email</label>
+        <input
+          type="email"
+          id="login-email"
+          name="email"
+          autocomplete="email"
+          required
+        />
+
+        <label for="login-password">Mot de passe</label>
+        <input
+          type="password"
+          id="login-password"
+          name="password"
+          autocomplete="current-password"
+          required
+        />
+
+        <button type="submit">Se connecter</button>
+
+        <p class="muted">
+          Pas encore de compte ?
+          <button type="button" id="show-signup">S'inscrire</button>
+        </p>
+      </form>
+
+      <!-- Inscription -->
+      <form id="signup-form" class="form hidden" novalidate>
+        <h2>Inscription</h2>
+
+        <label for="signup-firstname">Prénom</label>
+        <input
+          type="text"
+          id="signup-firstname"
+          name="first_name"
+          autocomplete="given-name"
+          required
+        />
+
+        <label for="signup-lastname">Nom</label>
+        <input
+          type="text"
+          id="signup-lastname"
+          name="last_name"
+          autocomplete="family-name"
+          required
+        />
+
+        <label for="signup-email">Email</label>
+        <input
+          type="email"
+          id="signup-email"
+          name="email"
+          autocomplete="email"
+          required
+        />
+
+        <label for="signup-password">Mot de passe</label>
+        <input
+          type="password"
+          id="signup-password"
+          name="password"
+          autocomplete="new-password"
+          required
+        />
+
+        <label for="signup-phone">Téléphone (optionnel)</label>
+        <input type="text" id="signup-phone" name="phone" autocomplete="tel" />
+
+        <label for="signup-linkedin">Profil LinkedIn (optionnel)</label>
+        <input
+          type="url"
+          id="signup-linkedin"
+          name="linkedin_url"
+          placeholder="https://www.linkedin.com/in/..."
+        />
+
+        <label for="signup-role">Je suis</label>
+        <select id="signup-role" name="person_type">
+          <option value="candidat" selected>Candidat</option>
+          <option value="recruteur">Recruteur</option>
+        </select>
+
+        <button type="submit">Créer un compte</button>
+
+        <p class="muted">
+          Déjà inscrit ?
+          <button type="button" id="show-login">Se connecter</button>
+        </p>
+      </form>
+    </div>
+
+    <!-- Un seul script, celui-ci pilote tout -->
+    <script src="js/login.js"></script>
+  </body>
+</html>

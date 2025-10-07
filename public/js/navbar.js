@@ -1,4 +1,6 @@
-// helpers API pour fetch sécurisés
+// public/js/navbar.js
+
+// --- Helpers API pour fetch sécurisés ---
 const api = {
   async get(url) {
     const r = await fetch(url, { credentials: "include" });
@@ -17,19 +19,59 @@ const api = {
   },
 };
 
-// Fonction d’initialisation de la navbar
+// --- Gestion du thème par rôle ---
+const ROLE_CLASSES = [
+  "mode-public",
+  "mode-candidat",
+  "mode-recruteur",
+  "mode-admin",
+];
+
+function clearRoleTheme() {
+  ROLE_CLASSES.forEach((cls) => document.body.classList.remove(cls));
+}
+
+function applyRoleTheme(role) {
+  clearRoleTheme();
+  document.body.dataset.role = role || "";
+  switch (role) {
+    case "candidat":
+      document.body.classList.add("mode-candidat");
+      break;
+    case "recruteur":
+      document.body.classList.add("mode-recruteur");
+      break;
+    case "admin":
+      document.body.classList.add("mode-admin");
+      break;
+    default:
+      document.body.classList.add("mode-public");
+  }
+}
+
+// --- Navbar ---
 export async function buildNavbar() {
   const el = document.getElementById("navbar");
 
-  // let user = { name: "Test User", role: "" }; // pour debug
+  // éviter un flash de thème
+  applyRoleTheme(null);
+
   let user = null;
   try {
     const res = await api.get("/api/auth/me");
     user = res.user;
-  } catch {}
+  } catch {
+    // non connecté
+  }
+
+  // applique le thème selon le rôle
+  applyRoleTheme(user?.role);
 
   if (!user) {
     el.innerHTML = `
+      <a href="/" class="logo">
+        <img src="/images/logo.png" alt="Logo">
+      </a>
       <ul class="nav-links">
         <li><a href="/">Accueil</a></li>
       </ul>
@@ -39,6 +81,11 @@ export async function buildNavbar() {
       </div>`;
     return;
   }
+
+  const displayName =
+    user.name ||
+    [user.first_name, user.last_name].filter(Boolean).join(" ") ||
+    "Mon compte";
 
   let roleLinks = "";
   if (user.role === "candidat") {
@@ -62,10 +109,13 @@ export async function buildNavbar() {
   }
 
   el.innerHTML = `
+    <a href="/" class="logo">
+      <img src="/images/logo.png" alt="Logo">
+    </a>
     <ul class="nav-links">${roleLinks}</ul>
     <div class="nav-actions">
       <div class="dropdown">
-        <button class="dropbtn">${user.name ?? "Mon compte"}</button>
+        <button class="dropbtn" aria-haspopup="true" aria-expanded="false">${displayName}</button>
         <div class="dropdown-content">
           <a href="/profil.html">Informations personnelles</a>
           ${
@@ -83,11 +133,34 @@ export async function buildNavbar() {
       </div>
     </div>`;
 
+  // Gestion du dropdown au clic
+  const dropdown = el.querySelector(".dropdown");
+  const dropbtn = el.querySelector(".dropbtn");
+
+  dropbtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle("open");
+    dropbtn.setAttribute("aria-expanded", dropdown.classList.contains("open"));
+  });
+
+  // Fermer le dropdown en cliquant ailleurs
+  document.addEventListener("click", (e) => {
+    if (!dropdown.contains(e.target)) {
+      dropdown.classList.remove("open");
+      dropbtn.setAttribute("aria-expanded", "false");
+    }
+  });
+
+  // logout
   document.getElementById("logoutBtn")?.addEventListener("click", async () => {
-    await api.post("/api/auth/logout", {});
-    location.href = "/";
+    try {
+      await api.post("/api/auth/logout", {});
+    } finally {
+      applyRoleTheme(null);
+      location.href = "/";
+    }
   });
 }
 
-// Appel automatique si tu veux, ou sinon import et appel dans un <script type="module">
+// --- Appel auto ---
 buildNavbar();

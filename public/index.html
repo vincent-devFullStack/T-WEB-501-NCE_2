@@ -5,23 +5,19 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>EVT Job board</title>
     <link rel="stylesheet" href="/style/main.css" />
+    <link rel="stylesheet" href="/style/navbar.css" />
+    <link rel="stylesheet" href="/style/index.css" />
+    <link rel="stylesheet" href="/style/search.css" />
   </head>
   <body>
     <header>
-      <div class="header-container">
-        <a href="/" class="logo">
-          <img
-            src="/EPI-LOGO-SIGNATURE-2018.png"
-            alt="Logo du site"
-            style="max-width: 150px; height: auto"
-          />
-        </a>
-        <nav id="navbar"><!-- rempli par navbar.js --></nav>
+      <div id="navbar" class="header-container">
+        <!-- Le contenu complet sera injecté par navbar.js -->
       </div>
     </header>
 
     <section class="search-section">
-      <form class="searchbar" onsubmit="return false;">
+      <form class="searchbar">
         <input
           type="text"
           placeholder="Intitulé, mot-clé, entreprise"
@@ -66,6 +62,7 @@
 
     <!-- Scripts -->
     <script type="module" src="/js/navbar.js"></script>
+    <script src="/js/search.js"></script>
     <script type="module" src="/js/load-jobs.js"></script>
   </body>
 </html>

@@ -21,14 +21,12 @@ const api = {
 export async function buildNavbar() {
   const el = document.getElementById("navbar");
 
-  let user = { name: "Test User", role: "" }; 
-
-  // let user = null;
-
-  // try {
-  //   const res = await api.get("/api/auth/me");
-  //   user = res.user;
-  // } catch {}
+  // let user = { name: "Test User", role: "" }; // pour debug
+  let user = null;
+  try {
+    const res = await api.get("/api/auth/me");
+    user = res.user;
+  } catch {}
 
   if (!user) {
     el.innerHTML = `
@@ -85,12 +83,10 @@ export async function buildNavbar() {
       </div>
     </div>`;
 
-  document
-    .getElementById("logoutBtn")
-    ?.addEventListener("click", async () => {
-      await api.post("/api/auth/logout", {});
-      location.href = "/";
-    });
+  document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+    await api.post("/api/auth/logout", {});
+    location.href = "/";
+  });
 }
 
 // Appel automatique si tu veux, ou sinon import et appel dans un <script type="module">

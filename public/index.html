@@ -4,14 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>EVT Job board</title>
-    <link rel="stylesheet" href="/public/style/main.css" />
+    <link rel="stylesheet" href="/style/main.css" />
   </head>
   <body>
     <header>
       <div class="header-container">
         <a href="/" class="logo">
           <img
-            src="/T-WEB-501-NCE_2/EPI-LOGO-SIGNATURE-2018.png"
+            src="/EPI-LOGO-SIGNATURE-2018.png"
             alt="Logo du site"
             style="max-width: 150px; height: auto"
           />
@@ -21,45 +21,51 @@
     </header>
 
     <section class="search-section">
-      <form class="searchbar">
+      <form class="searchbar" onsubmit="return false;">
         <input
           type="text"
           placeholder="Intitulé, mot-clé, entreprise"
           name="keywords"
         />
-
-        <input
-          type="text"
-          placeholder="Ville, région"
-          name="location"
-        />
-
+        <input type="text" placeholder="Ville, région" name="location" />
         <div class="dropdown-check">
           <button type="button" class="dropbtn">Type de contrat ▼</button>
           <div class="dropdown-content">
-            <label><input type="checkbox" name="type[]" value="CDI" /> CDI</label>
-            <label><input type="checkbox" name="type[]" value="CDD" /> CDD</label>
-            <label><input type="checkbox" name="type[]" value="Stage" /> Stage</label>
-            <label><input type="checkbox" name="type[]" value="Alternance" /> Alternance</label>
-            <label><input type="checkbox" name="type[]" value="Intérim" /> Intérim</label>
-            <label><input type="checkbox" name="type[]" value="Freelance" /> Freelance</label>
+            <label
+              ><input type="checkbox" name="type[]" value="CDI" /> CDI</label
+            >
+            <label
+              ><input type="checkbox" name="type[]" value="CDD" /> CDD</label
+            >
+            <label
+              ><input type="checkbox" name="type[]" value="Stage" />
+              Stage</label
+            >
+            <label
+              ><input type="checkbox" name="type[]" value="Alternance" />
+              Alternance</label
+            >
+            <label
+              ><input type="checkbox" name="type[]" value="Intérim" />
+              Intérim</label
+            >
+            <label
+              ><input type="checkbox" name="type[]" value="Freelance" />
+              Freelance</label
+            >
           </div>
         </div>
-
         <button type="submit" class="btn-search">Recherche</button>
       </form>
     </section>
 
-    <!-- Section offres récentes -->
     <main class="container">
       <h2>Offres récentes</h2>
-      <div id="jobs-list" class="jobs-grid">
-        <!-- Les offres seront injectées ici par JavaScript -->
-      </div>
+      <div id="jobs-list" class="jobs-grid"></div>
     </main>
 
     <!-- Scripts -->
-    <script type="module" src="/public/js/navbar.js"></script>
-    <script type="module" src="/public/js/load-jobs.js"></script>
+    <script type="module" src="/js/navbar.js"></script>
+    <script type="module" src="/js/load-jobs.js"></script>
   </body>
 </html>

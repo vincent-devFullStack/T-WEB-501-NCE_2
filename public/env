@@ -1,0 +1,14 @@
+PORT=3000
+
+DB_HOST=maglev.proxy.rlwy.net
+DB_PORT=52597
+DB_USER=root
+DB_PASS=hzOHAoExOrsVuGBsqWgXwpcAAubeUthr
+DB_NAME=job_advertisement 
+DB_SSL=true
+
+JWT_SECRET=superSecretDeLaMortQuiTue
+JWT_EXPIRES=7d
+
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173
+

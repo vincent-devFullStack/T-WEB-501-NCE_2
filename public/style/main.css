@@ -193,3 +193,28 @@ select:focus {
 .btn-secondary:hover {
   background: #e5e7eb;
 }
+
+/* ==============================
+   TITRES AVEC TRAIT DÉCORATIF
+   ============================== */
+
+/* Titre h1 principal */
+main h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 8px 0;
+  position: relative;
+  padding-bottom: 12px;
+}
+
+main h1::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 4px;
+  background: var(--brand);
+  border-radius: 2px;
+}

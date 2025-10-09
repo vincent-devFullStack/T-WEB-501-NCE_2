@@ -8,6 +8,7 @@ function generateApplicationForm(jobId, context = 'mobile', userData = null) {
   
   return `
     <form class="quick-apply-form" data-job-id="${jobId}" data-context="${context}">
+      ${isDesktop ? '<h3>Candidature rapide</h3>' : ''}
       <div class="form-group">
         <label for="name-${idSuffix}">Nom complet *</label>
         <input 

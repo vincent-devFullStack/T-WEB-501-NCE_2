@@ -26,3 +26,4 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+

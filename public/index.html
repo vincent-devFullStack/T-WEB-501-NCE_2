@@ -18,14 +18,12 @@
 
     <section class="search-section">
       <form class="searchbar">
-        <input
-          type="text"
-          placeholder="Intitulé, mot-clé, entreprise"
-          name="keywords"
-        />
+        <input type="text" placeholder="Intitulé, mot-clé, entreprise" name="keywords"/>
         <input type="text" placeholder="Ville, région" name="location" />
         <div class="dropdown-check">
           <button type="button" class="dropbtn">Type de contrat ▼</button>
+        
+
           <div class="dropdown-content">
             <label
               ><input type="checkbox" name="type[]" value="CDI" /> CDI</label
@@ -50,8 +48,9 @@
               Freelance</label
             >
           </div>
-        </div>
+        </div> 
         <button type="submit" class="btn-search">Recherche</button>
+
       </form>
     </section>
 
@@ -64,7 +63,6 @@
     </div>
 
     <aside class="sidebar-form">
-      <h3>Candidature rapide</h3>
       <div id="sidebar-form-container"></div>
     </aside>
 

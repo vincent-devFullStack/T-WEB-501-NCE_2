@@ -1,0 +1,556 @@
+/* ==============================
+   PAGE D'ACCUEIL - INDEX
+   Styles pour la section des offres d'emploi
+   ============================== */
+
+/* ==============================
+   LAYOUT PRINCIPAL
+   ============================== */
+.container-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+}
+
+.container-wrapper h2 {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 32px;
+  color: var(--ink);
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.container-wrapper h2::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 4px;
+  background: var(--brand);
+  border-radius: 2px;
+}
+
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.jobs-section {
+  width: 100%;
+}
+
+/* Desktop uniquement : 2 colonnes (2/3 et 1/3) */
+@media (min-width: 1025px) {
+  .main-layout {
+    grid-template-columns: 2fr 1fr;
+    gap: 32px;
+  }
+}
+
+/* ==============================
+   JOB CARDS AMÉLIORÉES
+   ============================== */
+.jobs-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0;
+}
+
+.job-card {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  padding: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #f3f4f6;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.job-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--brand);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
+}
+
+/* Désactiver le hover sur .job-card pour ne pas casser le flip */
+.job-card-wrapper .job-card:hover {
+  transform: none;
+}
+
+/* Appliquer le hover uniquement sur le front (recto) */
+.job-card-front:hover {
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+  border-color: color-mix(in srgb, var(--brand) 30%, transparent);
+}
+
+.job-card-front:hover::before {
+  transform: scaleY(1);
+}
+
+.job-card h3 {
+  margin: 0 0 12px;
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.job-card .company-name {
+  display: block;
+  font-size: 15px;
+  color: var(--brand);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.job-card .location {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.job-card .contract-type {
+  display: inline-block;
+  padding: 4px 12px;
+  background: color-mix(in srgb, var(--brand) 10%, transparent);
+  color: var(--brand);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.job-card .salary {
+  font-size: 15px;
+  color: var(--ink);
+  font-weight: 600;
+  margin-top: 12px;
+  display: block;
+}
+
+.job-card .btn {
+  margin-top: 16px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  background: var(--brand);
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.job-card .btn:hover {
+  background: var(--brand-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--brand) 35%, transparent);
+}
+
+/* ==============================
+   ACTIONS DES CARTES (BOUTONS)
+   ============================== */
+.job-card-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* Bouton "En savoir plus" */
+.btn-details {
+  flex: 1;
+  padding: 12px;
+  background: #f3f4f6;
+  color: var(--ink);
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-details:hover {
+  background: #e5e7eb;
+  transform: translateY(-2px);
+}
+
+/* ==============================
+   ACTIONS DANS LES DÉTAILS
+   ============================== */
+.job-details-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.job-details-actions .btn {
+  flex: 1;
+}
+
+.job-details-actions .btn-apply {
+  padding: 12px;
+  background: var(--brand);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.job-details-actions .btn-apply:hover {
+  background: var(--brand-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--brand) 35%, transparent);
+}
+
+.job-details-actions .btn-secondary {
+  padding: 12px;
+  background: #f3f4f6;
+  color: var(--ink);
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.job-details-actions .btn-secondary:hover {
+  background: #e5e7eb;
+  transform: translateY(-2px);
+}
+
+/* ==============================
+   RESPONSIVE - JOB CARDS
+   ============================== 
+@media (max-width: 968px) {
+  .jobs-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .container h2 {
+    font-size: 26px;
+  }
+
+  .jobs-grid {
+    grid-template-columns: 1fr;
+  }
+}
+ */
+
+/* ==============================
+   FORMULAIRE SIDEBAR (DESKTOP)
+   ============================== */
+.sidebar-form {
+  display: none; /* Caché par défaut sur mobile */
+}
+
+/* Afficher uniquement sur desktop */
+@media (min-width: 1025px) {
+  .sidebar-form {
+    display: block;
+    position: sticky;
+    top: 20px;
+    align-self: start;
+  }
+}
+
+/* Style de l'encadré du formulaire */
+.quick-apply-form {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  padding: 24px;
+  border: 1px solid #f3f4f6;
+}
+
+/* Titre avec barre décorative */
+.quick-apply-form h3 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 20px 0;
+  color: var(--ink);
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.quick-apply-form h3::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 4px;
+  background: var(--brand);
+  border-radius: 2px;
+}
+
+/* Groupes de champs */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 15%, transparent);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-group input[type="file"] {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+/* Bouton de soumission */
+.btn-submit {
+  width: 100%;
+  padding: 12px;
+  background: var(--brand);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* ==============================
+   FADE CARD (MOBILE/TABLETTE)
+   ============================== */
+
+.job-card-wrapper {
+  width: 100%;
+  position: relative;
+}
+
+.job-card-inner {
+  width: 100%;
+  position: relative;
+}
+
+.job-card-front,
+.job-card-back {
+  width: 100%;
+  transition: opacity 0.3s ease;
+}
+
+.job-card-front {
+  opacity: 1;
+}
+
+.job-card-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  padding: 24px;
+  border: 1px solid #f3f4f6;
+  box-sizing: border-box;
+}
+
+/* État "expanded" : masquer le recto, afficher le verso */
+.job-card-wrapper.expanded .job-card-front {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.job-card-wrapper.expanded .job-card-back {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.job-card-back h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+  color: var(--ink);
+}
+
+.job-card-back .quick-apply-form {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  padding: 0;
+}
+
+.job-card-back .form-group {
+  margin-bottom: 12px;
+}
+
+.job-card-back label {
+  font-size: 13px;
+}
+
+.job-card-back input,
+.job-card-back textarea {
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.form-actions-flip {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.form-actions-flip .btn {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+}
+
+.btn-back-flip {
+  background: #f3f4f6;
+  color: var(--ink);
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-back-flip:hover {
+  background: #e5e7eb;
+}
+
+@media (min-width: 1025px) {
+  .job-card-back {
+    display: none;
+  }
+}
+
+/* Layout home */
+.container-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+}
+.container-wrapper > h2 {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 24px 0 32px;
+  color: var(--ink);
+  position: relative;
+  padding-bottom: 12px;
+}
+.container-wrapper > h2::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 4px;
+  background: var(--brand);
+  border-radius: 2px;
+}
+
+.main-layout {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 28px;
+}
+.jobs-section {
+  min-width: 0;
+}
+.sidebar-form {
+  background: var(--card);
+  border: 1px solid #eef0f4;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 20px;
+  height: fit-content;
+}
+.sidebar-form h3 {
+  margin-bottom: 12px;
+}
+
+/* Sidebar formulaire */
+.sidebar-form .field {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.sidebar-form input[type="text"],
+.sidebar-form input[type="email"],
+.sidebar-form input[type="tel"],
+.sidebar-form input[type="file"],
+.sidebar-form textarea {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  font-size: 14px;
+}
+.sidebar-form textarea {
+  resize: vertical;
+}
+.sidebar-form label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.sidebar-form .btn {
+  width: 100%;
+  margin-top: 8px;
+}
+
+@media (max-width: 1024px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+  }
+}

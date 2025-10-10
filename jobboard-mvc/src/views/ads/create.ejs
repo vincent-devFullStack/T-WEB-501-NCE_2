@@ -1,0 +1,210 @@
+<link rel="stylesheet" href="/style/create.css" />
+
+<main class="create-container">
+  <header class="create-header">
+    <a href="/" class="logo"><img src="/images/logo.png" alt="Logo" /></a>
+    <h1>Créer une offre d’emploi</h1>
+  </header>
+
+  <p class="hint">Les champs marqués d’un * sont obligatoires.</p>
+
+  <!-- Action = endpoint POST qui crée l'annonce -->
+  <form id="create-ad-form" action="/ads" method="post" novalidate>
+    <div class="form-grid">
+      <!-- Identifiants / rattachements -->
+      <div class="field">
+        <label for="company_id">Entreprise (ID) *</label>
+        <input
+          type="number"
+          id="company_id"
+          name="company_id"
+          min="1"
+          required
+          placeholder="Ex. 2"
+        />
+        <small class="help"
+          >ID de l’entreprise (table <code>companies</code>).</small
+        >
+      </div>
+
+      <div class="field">
+        <label for="contact_person_id">Contact (ID)</label>
+        <input
+          type="number"
+          id="contact_person_id"
+          name="contact_person_id"
+          min="1"
+          placeholder="Ex. 8"
+        />
+      </div>
+
+      <!-- Intitulé & localisation -->
+      <div class="field full">
+        <label for="job_title">Titre du poste *</label>
+        <input
+          type="text"
+          id="job_title"
+          name="job_title"
+          maxlength="255"
+          required
+          placeholder="Développeur·se Full-stack JavaScript"
+        />
+      </div>
+
+      <div class="field full">
+        <label for="location">Localisation</label>
+        <input
+          type="text"
+          id="location"
+          name="location"
+          maxlength="255"
+          placeholder="Paris, Lyon, Remote…"
+        />
+      </div>
+
+      <!-- Descriptions -->
+      <div class="field full">
+        <label for="job_description">Description du poste</label>
+        <textarea
+          id="job_description"
+          name="job_description"
+          placeholder="Missions, contexte, équipe, outils…"
+        ></textarea>
+      </div>
+
+      <div class="field full">
+        <label for="requirements">Besoins / Pré-requis</label>
+        <textarea
+          id="requirements"
+          name="requirements"
+          placeholder="Compétences techniques et soft skills attendues…"
+        ></textarea>
+      </div>
+
+      <!-- Paramètres de l'offre -->
+      <div class="field">
+        <label for="contract_type">Type de contrat *</label>
+        <select id="contract_type" name="contract_type" required>
+          <option value="cdi" selected>CDI</option>
+          <option value="cdd">CDD</option>
+          <option value="interim">Intérim</option>
+          <option value="stage">Stage</option>
+          <option value="alternance">Alternance</option>
+          <option value="freelance">Freelance</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="working_time">Temps de travail</label>
+        <select id="working_time" name="working_time">
+          <option value="full_time" selected>Temps plein</option>
+          <option value="part_time">Temps partiel</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="experience_level">Niveau d’expérience</label>
+        <select id="experience_level" name="experience_level">
+          <option value="not_specified" selected>Non précisé</option>
+          <option value="junior">Débutant</option>
+          <option value="intermediate">Intermédiaire</option>
+          <option value="senior">Confirmé</option>
+          <option value="expert">Expert</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="remote_option">Télétravail</label>
+        <select id="remote_option" name="remote_option">
+          <option value="on_site" selected>Non</option>
+          <option value="hybrid">Hybride</option>
+          <option value="remote">Télétravail</option>
+        </select>
+      </div>
+
+      <!-- Salaire -->
+      <div class="field">
+        <label for="salary_min">Salaire minimum</label>
+        <input
+          type="number"
+          id="salary_min"
+          name="salary_min"
+          min="0"
+          step="500"
+          placeholder="Ex. 35000"
+        />
+      </div>
+
+      <div class="field">
+        <label for="salary_max">Salaire maximum</label>
+        <input
+          type="number"
+          id="salary_max"
+          name="salary_max"
+          min="0"
+          step="500"
+          placeholder="Ex. 45000"
+        />
+      </div>
+
+      <div class="field">
+        <label for="currency">Monnaie</label>
+        <select id="currency" name="currency">
+          <option value="EUR" selected>EUR (€)</option>
+          <option value="USD">USD ($)</option>
+          <option value="GBP">GBP (£)</option>
+        </select>
+      </div>
+
+      <!-- Deadline & statut -->
+      <div class="field">
+        <label for="deadline_date">Date limite</label>
+        <input type="date" id="deadline_date" name="deadline_date" />
+      </div>
+
+      <div class="field">
+        <label for="status">Statut *</label>
+        <select id="status" name="status" required>
+          <option value="draft" selected>Brouillon</option>
+          <option value="active">Active</option>
+          <option value="inactive">Fermée</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="btnbar">
+      <a class="btn btn-secondary" href="/ads">Annuler</a>
+      <button type="submit" class="btn btn-primary">Créer l’offre</button>
+    </div>
+  </form>
+</main>
+
+<script>
+  // Vérifs rapides côté client (le serveur doit TOUT revalider)
+  document
+    .getElementById("create-ad-form")
+    .addEventListener("submit", function (e) {
+      const min = Number(document.getElementById("salary_min").value || 0);
+      const max = Number(document.getElementById("salary_max").value || 0);
+
+      if (min && max && min > max) {
+        e.preventDefault();
+        alert(
+          "Le salaire minimum ne peut pas être supérieur au salaire maximum."
+        );
+        return;
+      }
+
+      // Normaliser certaines valeurs en minuscules pour l’API
+      [
+        "contract_type",
+        "working_time",
+        "experience_level",
+        "remote_option",
+        "status",
+      ].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el && el.value) el.value = String(el.value).toLowerCase();
+      });
+    });
+</script>

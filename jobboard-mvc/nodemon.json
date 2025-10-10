@@ -1,0 +1,5 @@
+{
+  "watch": ["src"],
+  "ext": "js,ejs",
+  "exec": "node --env-file=.env src/app.js"
+}

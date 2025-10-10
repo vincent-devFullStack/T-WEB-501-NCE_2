@@ -1,0 +1,105 @@
+<link rel="stylesheet" href="/style/login.css" />
+
+<div class="auth-shell">
+  <div class="auth-card">
+    <!-- ====== PANE CONNEXION ====== -->
+    <section id="login-pane" class="pane">
+      <form id="login-form" class="form" novalidate>
+        <h2>Se connecter</h2>
+
+        <label class="visually-hidden" for="login-email">Email</label>
+        <input
+          id="login-email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          required
+          placeholder="Email"
+        />
+
+        <label class="visually-hidden" for="login-password">Mot de passe</label>
+        <input
+          id="login-password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+          placeholder="Mot de passe"
+        />
+
+        <button type="submit" class="btn-primary">Se connecter</button>
+
+        <p class="small muted">
+          Pas encore de compte ?
+          <button id="show-signup" type="button" class="linklike">
+            S'inscrire
+          </button>
+        </p>
+      </form>
+    </section>
+
+    <!-- ====== PANE INSCRIPTION (caché par défaut) ====== -->
+    <section id="signup-pane" class="pane hidden" aria-hidden="true">
+      <form id="signup-form" class="form" novalidate>
+        <h2>Créer un compte</h2>
+
+        <input
+          id="signup-firstname"
+          name="first_name"
+          type="text"
+          required
+          placeholder="Prénom"
+        />
+        <input
+          id="signup-lastname"
+          name="last_name"
+          type="text"
+          required
+          placeholder="Nom"
+        />
+        <input
+          id="signup-email"
+          name="email"
+          type="email"
+          required
+          placeholder="Email"
+        />
+        <input
+          id="signup-password"
+          name="password"
+          type="password"
+          required
+          placeholder="Mot de passe"
+        />
+        <input
+          id="signup-phone"
+          name="phone"
+          type="text"
+          placeholder="Téléphone (optionnel)"
+        />
+        <input
+          id="signup-linkedin"
+          name="linkedin_url"
+          type="url"
+          placeholder="Profil LinkedIn (optionnel)"
+        />
+
+        <select id="signup-role" name="person_type">
+          <option value="candidat" selected>Candidat</option>
+          <option value="recruteur">Recruteur</option>
+        </select>
+
+        <button type="submit" class="btn-primary">Créer un compte</button>
+
+        <p class="small muted">
+          Déjà inscrit ?
+          <button id="show-login" type="button" class="linklike">
+            Se connecter
+          </button>
+        </p>
+      </form>
+    </section>
+  </div>
+</div>
+
+<script src="/js/login.js" defer></script>

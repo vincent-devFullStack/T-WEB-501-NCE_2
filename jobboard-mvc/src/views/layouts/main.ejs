@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title><%= title || "EVT Job board" %></title>
+
+    <!-- CSS global -->
+    <link rel="stylesheet" href="/style/main.css" />
+    <link rel="stylesheet" href="/style/navbar.css" />
+
+    <!-- (Optionnel) si tu veux minimiser le FOUC thème, on fera un mini inline plus tard -->
+  </head>
+  <body>
+    <header>
+      <div id="navbar" class="header-container">
+        <!-- rempli par navbar.js -->
+      </div>
+    </header>
+
+    <main><%- body %></main>
+
+    <!-- JS global -->
+    <script type="module" src="/js/navbar.js"></script>
+  </body>
+</html>

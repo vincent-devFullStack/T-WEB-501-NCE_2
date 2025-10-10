@@ -1,0 +1,56 @@
+<!-- CSS spécifiques à la home -->
+<link rel="stylesheet" href="/style/index.css" />
+<link rel="stylesheet" href="/style/search.css" />
+
+<section class="search-section">
+  <form class="searchbar">
+    <input
+      type="text"
+      placeholder="Intitulé, mot-clé, entreprise"
+      name="keywords"
+    />
+    <input type="text" placeholder="Ville, région" name="location" />
+    <div class="dropdown-check">
+      <button type="button" class="dropbtn">Type de contrat ▼</button>
+      <div class="dropdown-content">
+        <label><input type="checkbox" name="type[]" value="CDI" /> CDI</label>
+        <label><input type="checkbox" name="type[]" value="CDD" /> CDD</label>
+        <label
+          ><input type="checkbox" name="type[]" value="Stage" /> Stage</label
+        >
+        <label
+          ><input type="checkbox" name="type[]" value="Alternance" />
+          Alternance</label
+        >
+        <label
+          ><input type="checkbox" name="type[]" value="Intérim" />
+          Intérim</label
+        >
+        <label
+          ><input type="checkbox" name="type[]" value="Freelance" />
+          Freelance</label
+        >
+      </div>
+    </div>
+    <button type="submit" class="btn-search">Recherche</button>
+  </form>
+</section>
+
+<div class="container-wrapper">
+  <h2>Offres récentes</h2>
+
+  <div class="main-layout">
+    <section class="jobs-section">
+      <div id="jobs-list" class="jobs-grid"></div>
+    </section>
+
+    <aside class="sidebar-form">
+      <h3>Candidature rapide</h3>
+      <%- include("partials/applyForm", { showMessage: true }) %>
+    </aside>
+  </div>
+</div>
+
+<!-- Scripts spécifiques à la home -->
+<script src="/js/search.js"></script>
+<script type="module" src="/js/load-jobs.js"></script>

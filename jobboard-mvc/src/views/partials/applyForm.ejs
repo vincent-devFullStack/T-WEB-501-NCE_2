@@ -1,0 +1,36 @@
+<!-- views/partials/applyForm.ejs -->
+<form
+  class="quick-apply"
+  action="/apply"
+  method="post"
+  enctype="multipart/form-data"
+>
+  <div class="field">
+    <label>Nom complet *</label>
+    <input type="text" name="full_name" value="<%= user?.name || '' %>" />
+  </div>
+  <div class="field">
+    <label>Email *</label>
+    <input
+      type="email"
+      name="email"
+      value="<%= user?.email || '' %>"
+      required
+    />
+  </div>
+  <div class="field">
+    <label>Téléphone *</label>
+    <input type="tel" name="phone" value="<%= user?.phone || '' %>" required />
+  </div>
+  <div class="field">
+    <label>CV (PDF, max 5Mo) *</label>
+    <input type="file" name="cv" accept="application/pdf" required />
+  </div>
+  <% if (showMessage) { %>
+  <div class="field">
+    <label>Message de motivation</label>
+    <textarea name="message" rows="5"></textarea>
+  </div>
+  <% } %>
+  <button class="btn" type="submit">Envoyer la candidature</button>
+</form>

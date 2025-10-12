@@ -1,16 +1,24 @@
 // public/js/login.js
 document.addEventListener("DOMContentLoaded", () => {
-  // Ne rien faire si on n'est pas sur la page login
+  // Formulaires présents ?
   const loginForm = document.getElementById("login-form");
   const signupForm = document.getElementById("signup-form");
   if (!loginForm && !signupForm) return;
 
+  // Panneaux
   const loginPane = document.getElementById("login-pane");
   const signupPane = document.getElementById("signup-pane");
 
+  // Boutons de bascule
   const showSignupBtn = document.getElementById("show-signup");
   const showLoginBtn = document.getElementById("show-login");
 
+  // Champ conditionnel "Nom de l’entreprise" (visible si rôle = recruteur)
+  const roleSelect = document.getElementById("signup-role");
+  const companyWrap = document.getElementById("company-field"); // <div id="company-field">...</div>
+  const companyInput = document.getElementById("signup-company"); // <input id="signup-company" name="company_name">
+
+  // Utilitaires d'affichage
   const hide = (el) => {
     if (!el) return;
     el.classList.add("hidden");
@@ -25,23 +33,24 @@ document.addEventListener("DOMContentLoaded", () => {
   function toSignup() {
     hide(loginPane);
     show(signupPane);
+    updateCompanyField(); // ajuste l'état du champ entreprise
   }
   function toLogin() {
     hide(signupPane);
     show(loginPane);
   }
 
-  // --- Synchronise l'UI avec le hash de l'URL
+  // Synchronise l'UI avec l'ancre (#signup)
   function syncPaneWithHash() {
     if (location.hash === "#signup") toSignup();
     else toLogin();
   }
 
-  // Bascule via les boutons internes (et met à jour l'URL)
+  // Bascule via boutons
   showSignupBtn?.addEventListener("click", (e) => {
     e.preventDefault();
     if (location.hash !== "#signup") location.hash = "#signup";
-    else toSignup(); // au cas où
+    else toSignup();
   });
   showLoginBtn?.addEventListener("click", (e) => {
     e.preventDefault();
@@ -49,13 +58,27 @@ document.addEventListener("DOMContentLoaded", () => {
     toLogin();
   });
 
-  // Arrivée directe avec /auth/login#signup
+  // Arrivée initiale + changement d’ancre
   syncPaneWithHash();
-
-  // Si le hash change (ex: clic sur "S'inscrire" dans la navbar alors qu'on est déjà ici)
+  updateCompanyField(); // s’assure du bon état au premier rendu
   window.addEventListener("hashchange", syncPaneWithHash);
 
-  // ------- Helpers réseau -------
+  // Affichage conditionnel du champ "Nom de l’entreprise"
+  function updateCompanyField() {
+    if (!roleSelect || !companyWrap || !companyInput) return;
+    const isRecruiter = roleSelect.value === "recruteur";
+    if (isRecruiter) {
+      companyWrap.classList.remove("hidden");
+      companyInput.required = true;
+    } else {
+      companyWrap.classList.add("hidden");
+      companyInput.required = false;
+      companyInput.value = "";
+    }
+  }
+  roleSelect?.addEventListener("change", updateCompanyField);
+
+  // ------- Réseau -------
   async function safeJson(res) {
     try {
       return await res.json();
@@ -86,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = Object.fromEntries(new FormData(loginForm));
       const r = await postJSON("/api/auth/login", data);
       if (r.ok) {
-        location.assign("/"); // retour à l'accueil MVC
+        location.assign("/");
         return;
       }
       const err = await safeJson(r);
@@ -105,6 +128,19 @@ document.addEventListener("DOMContentLoaded", () => {
     setBusy(signupForm, true);
     try {
       const raw = Object.fromEntries(new FormData(signupForm));
+      const role = (raw.person_type || "candidat").trim();
+      const isRecruiter = role === "recruteur";
+
+      // Validation rapide côté client
+      if (isRecruiter) {
+        const name = (raw.company_name || "").trim();
+        if (!name) {
+          alert("Le nom de l’entreprise est requis pour un compte recruteur.");
+          setBusy(signupForm, false);
+          return;
+        }
+      }
+
       const payload = {
         first_name: raw.first_name?.trim(),
         last_name: raw.last_name?.trim(),
@@ -112,15 +148,21 @@ document.addEventListener("DOMContentLoaded", () => {
         password: raw.password,
         phone: raw.phone?.trim() || null,
         linkedin_url: raw.linkedin_url?.trim() || null,
-        person_type: raw.person_type || "candidat",
+        person_type: role,
+        company_name: isRecruiter ? (raw.company_name || "").trim() : null,
       };
+
       const r = await postJSON("/api/auth/register", payload);
       if (r.ok || r.status === 201) {
-        location.assign("/"); // retour à l'accueil après création
+        location.assign("/");
         return;
       }
       const err = await safeJson(r);
-      alert(err?.error || "Erreur lors de l'inscription.");
+      if (r.status === 409) {
+        alert("Email déjà utilisé.");
+      } else {
+        alert(err?.error || "Erreur lors de l'inscription.");
+      }
     } catch (err) {
       console.error(err);
       alert("Erreur réseau pendant l’inscription.");

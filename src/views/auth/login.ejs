@@ -84,10 +84,21 @@
           placeholder="Profil LinkedIn (optionnel)"
         />
 
-        <select id="signup-role" name="person_type">
+        <select id="signup-role" name="person_type" aria-label="Rôle">
           <option value="candidat" selected>Candidat</option>
           <option value="recruteur">Recruteur</option>
         </select>
+
+        <!-- Champ affiché seulement si 'Recruteur' -->
+        <div id="company-field" class="hidden">
+          <input
+            id="signup-company"
+            name="company_name"
+            type="text"
+            placeholder="Nom de l’entreprise"
+          />
+          <p class="small muted">Ce champ est requis pour les recruteurs.</p>
+        </div>
 
         <button type="submit" class="btn-primary">Créer un compte</button>
 

@@ -1,0 +1,217 @@
+<link rel="stylesheet" href="/style/main.css" />
+<link rel="stylesheet" href="/style/navbar.css" />
+<link rel="stylesheet" href="/style/profile.css" />
+
+<main class="profile-shell">
+  <div class="profile-header">
+    <div class="avatar">
+      <%= (userData.first_name?.[0] || 'U').toUpperCase() %>
+    </div>
+    <div class="hgroup">
+      <h1>Mon profil</h1>
+      <p class="muted">
+        Connecté en tant que <strong><%= userData.email %></strong> — rôle :
+        <span class="badge <%= userData.role %>"><%= userData.role %></span>
+      </p>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- ===== Infos personnelles ===== -->
+    <section class="card">
+      <h2>Informations personnelles</h2>
+      <form id="profile-form" class="form" novalidate>
+        <div class="form-grid">
+          <div class="field">
+            <label>Prénom *</label>
+            <input
+              type="text"
+              name="first_name"
+              required
+              value="<%= userData.first_name || '' %>"
+            />
+          </div>
+          <div class="field">
+            <label>Nom *</label>
+            <input
+              type="text"
+              name="last_name"
+              required
+              value="<%= userData.last_name || '' %>"
+            />
+          </div>
+          <div class="field">
+            <label>Téléphone</label>
+            <input
+              type="text"
+              name="phone"
+              value="<%= userData.phone || '' %>"
+            />
+          </div>
+          <div class="field">
+            <label>Profil LinkedIn</label>
+            <input
+              type="url"
+              name="linkedin_url"
+              value="<%= userData.linkedin_url || '' %>"
+            />
+          </div>
+        </div>
+        <div class="row" style="margin-top: 12px">
+          <button class="btn btn-primary" type="submit">Enregistrer</button>
+          <span class="muted" id="profile-saved" style="display: none"
+            >✔️ Sauvegardé</span
+          >
+        </div>
+      </form>
+    </section>
+
+    <!-- ===== Entreprise (recruteur) ===== -->
+    <% if (userData.role === 'recruteur') { %>
+    <section class="card">
+      <h2>Entreprise</h2>
+
+      <% if (userData.company_id) { %>
+      <!-- Vue lecture -->
+      <div id="company-view">
+        <p class="muted">Entreprise rattachée :</p>
+        <p style="font-weight: 700; font-size: 1.05rem">
+          <span id="company-name"><%= userData.company_name %></span>
+        </p>
+        <div class="row" style="margin-top: 10px">
+          <button id="edit-company" class="btn">Modifier le nom</button>
+        </div>
+        <div class="hr"></div>
+        <p class="muted">ID: <%= userData.company_id %></p>
+      </div>
+
+      <!-- Formulaire d’édition (caché par défaut) -->
+      <form id="company-edit" class="form" style="display: none" novalidate>
+        <div class="field">
+          <label>Nouveau nom de l’entreprise *</label>
+          <input
+            type="text"
+            name="company_name"
+            required
+            value="<%= userData.company_name %>"
+          />
+        </div>
+        <div class="row" style="margin-top: 10px">
+          <button class="btn btn-primary" type="submit">Enregistrer</button>
+          <button id="cancel-edit" class="btn btn-ghost" type="button">
+            Annuler
+          </button>
+        </div>
+      </form>
+      <% } else { %>
+      <div class="banner">Aucune entreprise rattachée à votre compte.</div>
+      <form
+        id="company-create"
+        class="form"
+        style="margin-top: 12px"
+        novalidate
+      >
+        <div class="field">
+          <label>Nom de l’entreprise *</label>
+          <input
+            type="text"
+            name="company_name"
+            required
+            placeholder="Ex. TechVision"
+          />
+        </div>
+        <button class="btn" type="submit">Créer / Attacher</button>
+      </form>
+      <% } %>
+    </section>
+    <% } %> <% if (userData.role === 'admin') { %>
+    <section class="card">
+      <h2>Administration</h2>
+      <a class="btn" href="/dashboard">Ouvrir le dashboard admin</a>
+    </section>
+    <% } %>
+  </div>
+</main>
+
+<div id="toast" class="toast">OK</div>
+
+<script type="module" src="/js/navbar.js"></script>
+<script>
+  const toast = (msg) => {
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    setTimeout(() => el.classList.remove("show"), 1600);
+  };
+
+  // --- Sauvegarde du profil
+  document
+    .getElementById("profile-form")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.currentTarget);
+      const r = await fetch("/api/account/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(Object.fromEntries(fd.entries())),
+      });
+      if (r.ok) {
+        document.getElementById("profile-saved").style.display = "inline";
+        toast("Profil mis à jour");
+      } else alert("Erreur lors de la mise à jour.");
+    });
+
+  // --- Création/attachement d’entreprise si non rattaché
+  document
+    .getElementById("company-create")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = e.currentTarget.company_name.value.trim();
+      if (!name) return;
+      const r = await fetch("/api/account/company", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ company_name: name }),
+      });
+      if (r.ok) location.reload();
+      else alert("Impossible d'attacher l'entreprise.");
+    });
+
+  // --- Edition du nom d’entreprise (si déjà rattaché)
+  const editBtn = document.getElementById("edit-company");
+  const cancelBtn = document.getElementById("cancel-edit");
+  const editForm = document.getElementById("company-edit");
+  const viewBlock = document.getElementById("company-view");
+
+  editBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    viewBlock.style.display = "none";
+    editForm.style.display = "block";
+  });
+  cancelBtn?.addEventListener("click", () => {
+    editForm.style.display = "none";
+    viewBlock.style.display = "block";
+  });
+
+  editForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = e.currentTarget.company_name.value.trim();
+    if (!name) return;
+    const r = await fetch("/api/account/company", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ company_name: name }),
+    });
+    if (r.ok) {
+      document.getElementById("company-name").textContent = name;
+      editForm.style.display = "none";
+      viewBlock.style.display = "block";
+      toast("Nom de l'entreprise mis à jour");
+    } else {
+      alert("Impossible de modifier le nom.");
+    }
+  });
+</script>

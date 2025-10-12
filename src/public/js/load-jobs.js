@@ -33,6 +33,18 @@ function formatSalary(min, max, currency = "EUR") {
   return `Jusqu'à ${fmt.format(max)}`;
 }
 
+function formatContractType(type) {
+  const labels = {
+    cdi: "CDI",
+    cdd: "CDD",
+    interim: "Intérim",
+    stage: "Stage",
+    alternance: "Alternance",
+    freelance: "Freelance",
+  };
+  return labels[type] || type;
+}
+
 // Formulaire de candidature (mobile = au dos de la carte ; desktop = sidebar)
 function generateApplicationForm(jobId, context = "mobile", userData = null) {
   const idSuffix = context === "desktop" ? "desktop" : jobId;
@@ -102,7 +114,7 @@ function adCard(a) {
             ${
               a.contract_type
                 ? ` — <span class="contract-type">${esc(
-                    a.contract_type
+                    formatContractType(a.contract_type)
                   )}</span>`
                 : ""
             }
@@ -164,7 +176,7 @@ async function loadJobs() {
     if (existing) {
       // Repli
       existing.remove();
-      // Réinjection du bouton “En savoir plus”
+      // Réinjection du bouton "En savoir plus"
       if (!card.querySelector(".job-card-actions")) {
         card.insertAdjacentHTML(
           "beforeend",
@@ -183,30 +195,37 @@ async function loadJobs() {
     card.insertAdjacentHTML(
       "beforeend",
       `
-      <div class="job-details">
-        <h4>Détails</h4>
-        <p><strong>Poste :</strong> ${esc(ad.job_title)}</p>
-        <p><strong>Entreprise :</strong> ${esc(ad.company_name ?? "")}</p>
-        <p><strong>Lieu :</strong> ${esc(ad.location ?? "")}</p>
-        <p><strong>Contrat :</strong> ${esc(ad.contract_type ?? "")}</p>
-        <p><strong>Salaire :</strong> ${esc(salary)}</p>
-        ${
-          ad.job_description
-            ? `<p><strong>Description :</strong><br>${esc(
-                ad.job_description
-              )}</p>`
-            : ""
-        }
-        <div class="job-details-actions">
-          <button class="btn btn-apply js-apply" data-id="${id}">Candidature rapide</button>
-          <button class="btn btn-secondary js-close-details" data-id="${id}">Réduire</button>
-        </div>
-      </div>
-      `
+  <div class="job-details">
+    <h4>Détails</h4>
+    <p><strong>Poste :</strong> ${esc(ad.job_title)}</p>
+    <p><strong>Entreprise :</strong> ${esc(ad.company_name ?? "")}</p>
+    <p><strong>Lieu :</strong> ${esc(ad.location ?? "")}</p>
+    <p><strong>Contrat :</strong> ${esc(
+      formatContractType(ad.contract_type) ?? ""
+    )}</p>
+    <p><strong>Salaire :</strong> ${esc(salary)}</p>
+    ${
+      ad.job_description
+        ? `<p><strong>Description :</strong><br>${esc(ad.job_description)}</p>`
+        : ""
+    }
+    ${
+      ad.requirements
+        ? `<p><strong>Besoins / Pré-requis :</strong><br>${esc(
+            ad.requirements
+          )}</p>`
+        : ""
+    }
+    <div class="job-details-actions">
+      <button class="btn btn-apply js-apply" data-id="${id}">Candidature rapide</button>
+      <button class="btn btn-secondary js-close-details" data-id="${id}">Réduire</button>
+    </div>
+  </div>
+  `
     );
   });
 
-  // Bouton “Réduire”
+  // Bouton "Réduire"
   wrap.addEventListener("click", (e) => {
     const closeBtn = e.target.closest(".js-close-details");
     if (!closeBtn) return;
@@ -224,7 +243,7 @@ async function loadJobs() {
     }
   });
 
-  // “Candidature rapide” -> flip mobile ou scroll sidebar desktop
+  // "Candidature rapide" -> flip mobile ou scroll sidebar desktop
   wrap.addEventListener("click", (e) => {
     const applyBtn = e.target.closest("button.js-apply[data-id]");
     if (!applyBtn) return;

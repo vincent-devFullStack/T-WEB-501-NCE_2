@@ -2,42 +2,43 @@
 
 <main class="create-container">
   <header class="create-header">
-    <a href="/" class="logo"><img src="/images/logo.png" alt="Logo" /></a>
-    <h1>Créer une offre d’emploi</h1>
+    <h1>Créer une offre d'emploi</h1>
   </header>
 
-  <p class="hint">Les champs marqués d’un * sont obligatoires.</p>
+  <% if (!userHasCompany) { %>
+    <div class="banner-warn">
+      Votre compte n'est rattaché à aucune entreprise.
+      <form id="quick-company" style="display:inline-flex; gap:.5rem; margin-left:.5rem">
+        <input name="company_name" required placeholder="Nom de l'entreprise" />
+        <button class="btn btn-secondary" type="submit">Enregistrer</button>
+      </form>
+    </div>
+    <script>
+      document.getElementById('quick-company')?.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        const r = await fetch('/api/account/company', {
+          method:'POST',
+          headers: {'Content-Type':'application/json'},
+          credentials:'include',
+          body: JSON.stringify({ company_name: fd.get('company_name') })
+        });
+        if (r.ok) location.reload();
+        else alert('Impossible d\'attacher l\'entreprise.');
+      });
+    </script>
+  <% } %>
 
-  <!-- Action = endpoint POST qui crée l'annonce -->
+  <p class="hint">Les champs marqués d'un * sont obligatoires.</p>
+
   <form id="create-ad-form" action="/ads" method="post" novalidate>
+    <!-- Entreprise affichée à titre informatif -->
+    <div class="readonly-line">
+      <span class="label">Entreprise</span>
+      <span class="value"><%= companyName || '—' %></span>
+    </div>
+
     <div class="form-grid">
-      <!-- Identifiants / rattachements -->
-      <div class="field">
-        <label for="company_id">Entreprise (ID) *</label>
-        <input
-          type="number"
-          id="company_id"
-          name="company_id"
-          min="1"
-          required
-          placeholder="Ex. 2"
-        />
-        <small class="help"
-          >ID de l’entreprise (table <code>companies</code>).</small
-        >
-      </div>
-
-      <div class="field">
-        <label for="contact_person_id">Contact (ID)</label>
-        <input
-          type="number"
-          id="contact_person_id"
-          name="contact_person_id"
-          min="1"
-          placeholder="Ex. 8"
-        />
-      </div>
-
       <!-- Intitulé & localisation -->
       <div class="field full">
         <label for="job_title">Titre du poste *</label>
@@ -81,7 +82,7 @@
         ></textarea>
       </div>
 
-      <!-- Paramètres de l'offre -->
+      <!-- Paramètres -->
       <div class="field">
         <label for="contract_type">Type de contrat *</label>
         <select id="contract_type" name="contract_type" required>
@@ -97,18 +98,18 @@
       <div class="field">
         <label for="working_time">Temps de travail</label>
         <select id="working_time" name="working_time">
-          <option value="full_time" selected>Temps plein</option>
-          <option value="part_time">Temps partiel</option>
+          <option value="temps_plein" selected>Temps plein</option>
+          <option value="temps_partiel">Temps partiel</option>
         </select>
       </div>
 
       <div class="field">
-        <label for="experience_level">Niveau d’expérience</label>
+        <label for="experience_level">Niveau d'expérience</label>
         <select id="experience_level" name="experience_level">
-          <option value="not_specified" selected>Non précisé</option>
-          <option value="junior">Débutant</option>
-          <option value="intermediate">Intermédiaire</option>
-          <option value="senior">Confirmé</option>
+          <option value="non_precise" selected>Non précisé</option>
+          <option value="debutant">Débutant</option>
+          <option value="intermediaire">Intermédiaire</option>
+          <option value="confirme">Confirmé</option>
           <option value="expert">Expert</option>
         </select>
       </div>
@@ -116,35 +117,21 @@
       <div class="field">
         <label for="remote_option">Télétravail</label>
         <select id="remote_option" name="remote_option">
-          <option value="on_site" selected>Non</option>
-          <option value="hybrid">Hybride</option>
-          <option value="remote">Télétravail</option>
+          <option value="non" selected>Non</option>
+          <option value="hybride">Hybride</option>
+          <option value="full_remote">Télétravail</option>
         </select>
       </div>
 
       <!-- Salaire -->
       <div class="field">
         <label for="salary_min">Salaire minimum</label>
-        <input
-          type="number"
-          id="salary_min"
-          name="salary_min"
-          min="0"
-          step="500"
-          placeholder="Ex. 35000"
-        />
+        <input type="number" id="salary_min" name="salary_min" min="0" step="500" placeholder="Ex. 35000" />
       </div>
 
       <div class="field">
         <label for="salary_max">Salaire maximum</label>
-        <input
-          type="number"
-          id="salary_max"
-          name="salary_max"
-          min="0"
-          step="500"
-          placeholder="Ex. 45000"
-        />
+        <input type="number" id="salary_max" name="salary_max" min="0" step="500" placeholder="Ex. 45000" />
       </div>
 
       <div class="field">
@@ -170,41 +157,38 @@
           <option value="inactive">Fermée</option>
         </select>
       </div>
+
+      <!-- (Facultatif) email de contact d'annonce -->
+      <div class="field full">
+        <label for="contact_email">Email de contact (optionnel)</label>
+        <input
+          type="email"
+          id="contact_email"
+          name="contact_email"
+          placeholder="ex. jobs@mon-entreprise.com"
+          value="<%= userEmail || '' %>"
+        />
+        <small class="help">Par défaut, les candidatures vous seront adressées via votre compte.</small>
+      </div>
     </div>
 
     <div class="btnbar">
-      <a class="btn btn-secondary" href="/ads">Annuler</a>
-      <button type="submit" class="btn btn-primary">Créer l’offre</button>
+      <a class="btn btn-secondary" href="/">Annuler</a>
+      <button type="submit" class="btn btn-primary" <%= !userHasCompany ? 'disabled' : '' %>>
+        Créer l'offre
+      </button>
     </div>
   </form>
 </main>
 
 <script>
-  // Vérifs rapides côté client (le serveur doit TOUT revalider)
-  document
-    .getElementById("create-ad-form")
-    .addEventListener("submit", function (e) {
-      const min = Number(document.getElementById("salary_min").value || 0);
-      const max = Number(document.getElementById("salary_max").value || 0);
-
-      if (min && max && min > max) {
-        e.preventDefault();
-        alert(
-          "Le salaire minimum ne peut pas être supérieur au salaire maximum."
-        );
-        return;
-      }
-
-      // Normaliser certaines valeurs en minuscules pour l’API
-      [
-        "contract_type",
-        "working_time",
-        "experience_level",
-        "remote_option",
-        "status",
-      ].forEach((id) => {
-        const el = document.getElementById(id);
-        if (el && el.value) el.value = String(el.value).toLowerCase();
-      });
-    });
+  document.getElementById("create-ad-form").addEventListener("submit", function (e) {
+    const min = Number(document.getElementById("salary_min").value || 0);
+    const max = Number(document.getElementById("salary_max").value || 0);
+    if (min && max && min > max) {
+      e.preventDefault();
+      alert("Le salaire minimum ne peut pas être supérieur au salaire maximum.");
+      return;
+    }
+  });
 </script>

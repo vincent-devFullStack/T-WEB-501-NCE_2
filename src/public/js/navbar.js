@@ -48,7 +48,7 @@ async function buildNavbar() {
 
   let user = null;
   try {
-    const res = await api.get("/api/auth/me"); // alias serveur actif
+    const res = await api.get("/api/auth/me");
     user = res.user ?? null;
   } catch {
     // non connecté
@@ -83,8 +83,8 @@ async function buildNavbar() {
       <li><a href="/entreprise">Trouver une entreprise</a></li>`;
   } else if (user.role === "recruteur") {
     roleLinks += `
-      <li><a href="/ads">Publier des offres</a></li>
-      <li><a href="/candidats">Trouver des candidats</a></li>`;
+    <li><a href="/ads/my-ads">Mes offres</a></li>
+    <li><a href="/candidats">Trouver des candidats</a></li>`;
   } else if (user.role === "admin") {
     roleLinks += `<li><a href="/dashboard">Dashboard Admin</a></li>`;
   }
@@ -102,21 +102,20 @@ async function buildNavbar() {
               ? '<a href="/mes-candidatures" role="menuitem">Mes candidatures</a>'
               : ""
           }
-          ${
-            user.role !== "candidat"
-              ? '<a href="/mes-offres" role="menuitem">Mes offres</a>'
-              : ""
-          }
+${
+  user.role === "recruteur"
+    ? '<a href="/ads/my-ads" role="menuitem">Mes offres</a>'
+    : ""
+}
           <button id="logoutBtn" class="linklike" role="menuitem">Déconnexion</button>
         </div>
       </div>
     </div>
   `;
 
-  // Dropdown (clic + clavier + clic extérieur)
+  // Dropdown
   const dropdown = el.querySelector(".dropdown");
   const dropbtn = el.querySelector(".dropbtn");
-  const menu = el.querySelector(".dropdown-content");
 
   function closeMenu() {
     dropdown?.classList.remove("open");
@@ -129,18 +128,15 @@ async function buildNavbar() {
 
   dropbtn?.addEventListener("click", (e) => {
     e.stopPropagation();
-    const isOpen = dropdown?.classList.contains("open");
-    if (isOpen) closeMenu();
+    if (dropdown?.classList.contains("open")) closeMenu();
     else openMenu();
   });
 
-  // fermer au clic extérieur
   document.addEventListener("click", (e) => {
     if (!dropdown || !dropbtn) return;
     if (!dropdown.contains(e.target)) closeMenu();
   });
 
-  // fermer au clavier
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeMenu();
   });
@@ -156,7 +152,6 @@ async function buildNavbar() {
   });
 }
 
-// Initialise quand le DOM est prêt
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", buildNavbar);
 } else {

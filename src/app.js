@@ -24,6 +24,9 @@ import authRoutes from "./routes/auth.js"; // SSR /auth/*
 import adsRoutes from "./routes/ads.js"; // SSR /ads
 import apiAdsRoutes from "./routes/api.ads.js"; // API /api/ads
 import apiAuthRoutes from "./routes/api.auth.js"; // API /api/auth
+import profileRoutes from "./routes/profile.js"; // SSR /profile
+import apiAccountRoutes from "./routes/api.account.js"; // API /api/account
+
 console.log("[BOOT]", {
   file: import.meta.url,
   pid: process.pid,
@@ -107,6 +110,8 @@ app.use("/ads", adsRoutes);
 // ---- Routes API
 app.use("/api/auth", apiAuthRoutes);
 app.use("/api/ads", apiAdsRoutes);
+app.use("/profil", profileRoutes); // SSR
+app.use("/api/account", apiAccountRoutes);
 
 // 404
 app.use((req, res) => {

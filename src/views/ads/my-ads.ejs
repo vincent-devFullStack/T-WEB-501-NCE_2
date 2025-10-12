@@ -1,0 +1,125 @@
+<link rel="stylesheet" href="/style/main.css" />
+<link rel="stylesheet" href="/style/navbar.css" />
+<link rel="stylesheet" href="/style/my-ads.css" />
+
+<main class="create-container">
+  <header class="create-header">
+    <h1>Mes offres d'emploi</h1>
+    <a href="/ads/new" class="btn btn-primary">+ Nouvelle offre</a>
+  </header>
+
+  <% if (ads.length === 0) { %>
+  <div class="alert info">
+    <p>Vous n'avez pas encore publié d'offre d'emploi.</p>
+    <a href="/ads/new" class="btn btn-primary" style="margin-top: 1rem"
+      >Créer ma première offre</a
+    >
+  </div>
+  <% } else { %>
+  <div class="ads-list">
+    <% ads.forEach(ad => { %>
+    <article class="ad-card">
+      <div class="ad-header">
+        <div>
+          <h3><%= ad.job_title %></h3>
+          <p class="company-name"><%= ad.company_name || '—' %></p>
+        </div>
+        <span class="badge <%= ad.status %>"><%= ad.status %></span>
+      </div>
+
+      <div class="ad-meta">
+        <p>
+          <strong>Localisation:</strong> <%= ad.location || 'Non précisée' %>
+        </p>
+        <p><strong>Contrat:</strong> <%= ad.contract_type || '—' %></p>
+        <p>
+          <strong>Créée le:</strong> <%= new
+          Date(ad.created_at).toLocaleDateString('fr-FR') %>
+        </p>
+        <% if (ad.deadline_date) { %>
+        <p>
+          <strong>Date limite:</strong> <%= new
+          Date(ad.deadline_date).toLocaleDateString('fr-FR') %>
+        </p>
+        <% } %>
+      </div>
+
+      <div class="ad-actions">
+        <a href="/ads/<%= ad.ad_id %>/edit" class="btn btn-secondary"
+          >Modifier</a
+        >
+        <button class="btn btn-ghost js-delete" data-id="<%= ad.ad_id %>">
+          Supprimer
+        </button>
+        <% if (ad.status === 'active') { %>
+        <button
+          class="btn btn-ghost js-toggle-status"
+          data-id="<%= ad.ad_id %>"
+          data-status="fermee"
+        >
+          Fermer
+        </button>
+        <% } else if (ad.status === 'brouillon') { %>
+        <button
+          class="btn js-toggle-status"
+          data-id="<%= ad.ad_id %>"
+          data-status="active"
+        >
+          Publier
+        </button>
+        <% } else { %>
+        <button
+          class="btn js-toggle-status"
+          data-id="<%= ad.ad_id %>"
+          data-status="active"
+        >
+          Réactiver
+        </button>
+        <% } %>
+      </div>
+    </article>
+    <% }) %>
+  </div>
+  <% } %>
+</main>
+
+<script type="module" src="/js/navbar.js"></script>
+<script>
+  document.querySelectorAll(".js-delete").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const id = e.target.dataset.id;
+      if (!confirm("Êtes-vous sûr de vouloir supprimer cette offre ?")) return;
+
+      const r = await fetch(`/api/ads/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (r.ok) {
+        location.reload();
+      } else {
+        alert("Erreur lors de la suppression.");
+      }
+    });
+  });
+
+  document.querySelectorAll(".js-toggle-status").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const id = e.target.dataset.id;
+      const newStatus = e.target.dataset.status;
+
+      const r = await fetch(`/api/ads/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (r.ok) {
+        location.reload();
+      } else {
+        alert("Erreur lors de la modification du statut.");
+      }
+    });
+  });
+</script>

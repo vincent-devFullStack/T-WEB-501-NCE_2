@@ -70,6 +70,59 @@ r.get("/my-ads", requireAuth, requireRole("recruteur"), async (req, res) => {
 });
 
 /**
+ * GET /ads/:id/candidatures - Gestion des candidatures (Kanban)
+ */
+r.get(
+  "/:id/candidatures",
+  requireAuth,
+  requireRole("recruteur"),
+  async (req, res) => {
+    try {
+      const adId = Number(req.params.id);
+
+      // Vérifier que l'offre appartient bien à l'utilisateur
+      const [[ad]] = await pool.query(
+        `SELECT a.*, c.company_name 
+       FROM advertisements a
+       LEFT JOIN companies c ON a.company_id = c.company_id
+       WHERE a.ad_id = ? AND a.contact_person_id = ?`,
+        [adId, req.user.id]
+      );
+
+      if (!ad) {
+        return res.status(403).send("Accès refusé ou offre introuvable.");
+      }
+
+      // Récupérer toutes les candidatures pour cette offre
+      const [applications] = await pool.query(
+        `SELECT 
+        ap.*,
+        p.first_name,
+        p.last_name,
+        p.email,
+        p.phone
+       FROM applications ap
+       LEFT JOIN people p ON ap.person_id = p.person_id
+       WHERE ap.ad_id = ?
+       ORDER BY ap.application_date DESC`,
+        [adId]
+      );
+
+      return res.render("ads/candidatures", {
+        title: `Candidatures - ${ad.job_title}`,
+        ad: ad,
+        applications: applications,
+      });
+    } catch (e) {
+      console.error(e);
+      return res
+        .status(500)
+        .send("Erreur lors du chargement des candidatures.");
+    }
+  }
+);
+
+/**
  * POST /ads – crée l'annonce (réservée aux recruteurs)
  */
 r.post("/", requireAuth, requireRole("recruteur"), async (req, res) => {
@@ -145,6 +198,127 @@ r.post("/", requireAuth, requireRole("recruteur"), async (req, res) => {
   } catch (e) {
     console.error(e);
     return res.status(500).send("Erreur lors de la création de l'offre.");
+  }
+});
+
+/**
+ * GET /ads/:id/edit - Page de modification d'une offre
+ */
+r.get("/:id/edit", requireAuth, requireRole("recruteur"), async (req, res) => {
+  try {
+    const adId = Number(req.params.id);
+
+    // Récupérer l'offre et vérifier qu'elle appartient à l'utilisateur
+    const [[ad]] = await pool.query(
+      `SELECT a.*, c.company_name
+       FROM advertisements a
+       LEFT JOIN companies c ON a.company_id = c.company_id
+       WHERE a.ad_id = ? AND a.contact_person_id = ?`,
+      [adId, req.user.id]
+    );
+
+    if (!ad) {
+      return res.status(403).send("Accès refusé ou offre introuvable.");
+    }
+
+    return res.render("ads/edit", {
+      title: `Modifier - ${ad.job_title}`,
+      ad: ad,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send("Erreur lors du chargement de l'offre.");
+  }
+});
+
+/**
+ * POST /ads/:id/edit - Mise à jour d'une offre
+ */
+r.post("/:id/edit", requireAuth, requireRole("recruteur"), async (req, res) => {
+  try {
+    const adId = Number(req.params.id);
+
+    // Vérifier que l'offre appartient à l'utilisateur
+    const [[ad]] = await pool.query(
+      "SELECT contact_person_id FROM advertisements WHERE ad_id = ?",
+      [adId]
+    );
+
+    if (!ad || ad.contact_person_id !== req.user.id) {
+      return res.status(403).send("Accès refusé.");
+    }
+
+    const {
+      job_title,
+      location,
+      job_description,
+      requirements,
+      contract_type,
+      working_time,
+      experience_level,
+      remote_option,
+      salary_min,
+      salary_max,
+      currency,
+      deadline_date,
+      status,
+    } = req.body || {};
+
+    // Validation
+    if (!job_title || !contract_type || !status) {
+      return res.status(422).send("Champs requis manquants.");
+    }
+
+    // ⚠️ IMPORTANT: Convertir le statut avec le même mapping que l'API
+    const STATUS_MAP = {
+      active: "active",
+      brouillon: "brouillon",
+      draft: "brouillon",
+      fermee: "fermee",
+      inactive: "fermee",
+    };
+
+    const dbStatus = STATUS_MAP[status.toLowerCase()] || status;
+
+    // Mise à jour
+    await pool.query(
+      `UPDATE advertisements SET
+        job_title = ?,
+        job_description = ?,
+        requirements = ?,
+        location = ?,
+        contract_type = ?,
+        working_time = ?,
+        experience_level = ?,
+        remote_option = ?,
+        salary_min = ?,
+        salary_max = ?,
+        currency = ?,
+        deadline_date = ?,
+        status = ?
+       WHERE ad_id = ?`,
+      [
+        job_title?.trim(),
+        job_description?.trim() || null,
+        requirements?.trim() || null,
+        location?.trim() || null,
+        contract_type || null,
+        working_time || null,
+        experience_level || null,
+        remote_option || null,
+        salary_min ? Number(salary_min) : null,
+        salary_max ? Number(salary_max) : null,
+        currency || "EUR",
+        deadline_date || null,
+        dbStatus, // ⚠️ Utilise le statut converti
+        adId,
+      ]
+    );
+
+    return res.redirect("/ads/my-ads");
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send("Erreur lors de la modification de l'offre.");
   }
 });
 

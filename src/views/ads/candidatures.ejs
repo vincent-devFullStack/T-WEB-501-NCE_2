@@ -1,0 +1,170 @@
+<link rel="stylesheet" href="/style/main.css" />
+<link rel="stylesheet" href="/style/navbar.css" />
+<link rel="stylesheet" href="/style/kanban.css" />
+
+<main class="kanban-container">
+  <header class="kanban-header">
+    <div>
+      <a href="/ads/my-ads" class="back-link">← Retour à mes offres</a>
+      <h1><%= ad.job_title %></h1>
+      <p class="company-name"><%= ad.company_name %></p>
+    </div>
+    <div class="stats">
+      <span class="stat-badge">Total: <%= applications.length %></span>
+    </div>
+  </header>
+
+  <div class="kanban-board">
+    <!-- Candidatures reçues -->
+    <div class="kanban-column" data-status="recu">
+      <div class="column-header">
+        <h3>📬 Candidatures reçues</h3>
+        <span class="count" id="count-recu">0</span>
+      </div>
+      <div class="column-content" id="column-recu"></div>
+    </div>
+
+    <!-- À appeler -->
+    <div class="kanban-column" data-status="a_appeler">
+      <div class="column-header">
+        <h3>📞 À appeler</h3>
+        <span class="count" id="count-a_appeler">0</span>
+      </div>
+      <div class="column-content" id="column-a_appeler"></div>
+    </div>
+
+    <!-- À recevoir -->
+    <div class="kanban-column" data-status="a_recevoir">
+      <div class="column-header">
+        <h3>🤝 À recevoir</h3>
+        <span class="count" id="count-a_recevoir">0</span>
+      </div>
+      <div class="column-content" id="column-a_recevoir"></div>
+    </div>
+
+    <!-- Refusé(e)s -->
+    <div class="kanban-column" data-status="refuse">
+      <div class="column-header">
+        <h3>❌ Refusé(e)s</h3>
+        <span class="count" id="count-refuse">0</span>
+      </div>
+      <div class="column-content" id="column-refuse"></div>
+    </div>
+
+    <!-- Recruté(e) -->
+    <div class="kanban-column" data-status="recrute">
+      <div class="column-header">
+        <h3>✅ Recruté(e)</h3>
+        <span class="count" id="count-recrute">0</span>
+      </div>
+      <div class="column-content" id="column-recrute"></div>
+    </div>
+  </div>
+</main>
+
+<script type="module" src="/js/navbar.js"></script>
+<script>
+  const applications = JSON.parse(
+    document.getElementById("applications-data").textContent
+  );
+  function renderCard(app) {
+    const appliedDate = new Date(app.applied_at).toLocaleDateString("fr-FR");
+    return `
+      <div class="kanban-card" data-id="${app.application_id}" draggable="true">
+        <div class="card-header">
+          <h4>${app.first_name || ""} ${app.last_name || ""}</h4>
+          <span class="card-date">${appliedDate}</span>
+        </div>
+        <p class="card-email">📧 ${app.email || "Non renseigné"}</p>
+        <p class="card-phone">📱 ${app.phone || "Non renseigné"}</p>
+        ${
+          app.cv_path
+            ? `<a href="${app.cv_path}" target="_blank" class="btn-cv">📄 Voir le CV</a>`
+            : ""
+        }
+        ${
+          app.cover_letter
+            ? `<p class="card-message">${app.cover_letter.substring(
+                0,
+                100
+              )}...</p>`
+            : ""
+        }
+      </div>
+    `;
+  }
+
+  function renderBoard() {
+    const columns = ["recu", "a_appeler", "a_recevoir", "refuse", "recrute"];
+
+    columns.forEach((status) => {
+      const filtered = applications.filter((app) => app.status === status);
+      const container = document.getElementById(`column-${status}`);
+      const count = document.getElementById(`count-${status}`);
+
+      container.innerHTML = filtered.map(renderCard).join("");
+      count.textContent = filtered.length;
+    });
+
+    attachDragEvents();
+  }
+
+  function attachDragEvents() {
+    const cards = document.querySelectorAll(".kanban-card");
+    const columns = document.querySelectorAll(".column-content");
+
+    cards.forEach((card) => {
+      card.addEventListener("dragstart", (e) => {
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/html", card.innerHTML);
+        card.classList.add("dragging");
+      });
+
+      card.addEventListener("dragend", () => {
+        card.classList.remove("dragging");
+      });
+    });
+
+    columns.forEach((column) => {
+      column.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        column.classList.add("drag-over");
+      });
+
+      column.addEventListener("dragleave", () => {
+        column.classList.remove("drag-over");
+      });
+
+      column.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        column.classList.remove("drag-over");
+
+        const card = document.querySelector(".dragging");
+        if (!card) return;
+
+        const appId = Number(card.dataset.id);
+        const newStatus = column.parentElement.dataset.status;
+
+        // Mise à jour en base de données
+        const res = await fetch(`/api/applications/${appId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ status: newStatus }),
+        });
+
+        if (res.ok) {
+          // Mettre à jour l'état local
+          const app = applications.find((a) => a.application_id === appId);
+          if (app) app.status = newStatus;
+          renderBoard();
+        } else {
+          alert("Erreur lors de la mise à jour du statut");
+        }
+      });
+    });
+  }
+
+  renderBoard();
+</script>

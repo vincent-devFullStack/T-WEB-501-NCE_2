@@ -1,36 +1,58 @@
 <!-- views/partials/applyForm.ejs -->
-<form
-  class="quick-apply"
-  action="/apply"
-  method="post"
-  enctype="multipart/form-data"
->
+<form id="quick-apply-form" class="quick-apply" enctype="multipart/form-data">
+  <input type="hidden" name="ad_id" id="apply-ad-id" value="" />
+
   <div class="field">
     <label>Nom complet *</label>
-    <input type="text" name="full_name" value="<%= user?.name || '' %>" />
+    <input
+      type="text"
+      id="apply-name"
+      name="full_name"
+      required
+      placeholder="Jean Dupont"
+    />
   </div>
   <div class="field">
     <label>Email *</label>
     <input
       type="email"
+      id="apply-email"
       name="email"
-      value="<%= user?.email || '' %>"
       required
+      placeholder="jean.dupont@email.com"
     />
   </div>
   <div class="field">
     <label>Téléphone *</label>
-    <input type="tel" name="phone" value="<%= user?.phone || '' %>" required />
+    <input
+      type="tel"
+      id="apply-phone"
+      name="phone"
+      required
+      placeholder="06 12 34 56 78"
+    />
   </div>
   <div class="field">
     <label>CV (PDF, max 5Mo) *</label>
-    <input type="file" name="cv" accept="application/pdf" required />
+    <input
+      type="file"
+      id="apply-cv"
+      name="cv"
+      accept="application/pdf"
+      required
+    />
   </div>
   <% if (showMessage) { %>
   <div class="field">
     <label>Message de motivation</label>
-    <textarea name="message" rows="5"></textarea>
+    <textarea
+      id="apply-message"
+      name="message"
+      rows="5"
+      placeholder="Parlez-nous de vous..."
+    ></textarea>
   </div>
   <% } %>
   <button class="btn" type="submit">Envoyer la candidature</button>
+  <p class="form-status" id="apply-status"></p>
 </form>

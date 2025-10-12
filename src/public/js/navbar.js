@@ -83,8 +83,7 @@ async function buildNavbar() {
       <li><a href="/entreprise">Trouver une entreprise</a></li>`;
   } else if (user.role === "recruteur") {
     roleLinks += `
-    <li><a href="/ads/my-ads">Mes offres</a></li>
-    <li><a href="/candidats">Trouver des candidats</a></li>`;
+    <li><a href="/ads/my-ads">Mes offres</a></li>`;
   } else if (user.role === "admin") {
     roleLinks += `<li><a href="/dashboard">Dashboard Admin</a></li>`;
   }

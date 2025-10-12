@@ -1,0 +1,178 @@
+<link rel="stylesheet" href="/style/create.css" />
+
+<main class="create-container">
+  <header class="create-header">
+    <h1>Modifier l'offre d'emploi</h1>
+  </header>
+
+  <p class="hint">Les champs marqués d'un * sont obligatoires.</p>
+
+  <form id="edit-ad-form" action="/ads/<%= ad.ad_id %>/edit" method="post" novalidate>
+    <!-- Entreprise (lecture seule) -->
+    <div class="readonly-line">
+      <span class="label">Entreprise</span>
+      <span class="value"><%= ad.company_name || '—' %></span>
+    </div>
+
+    <div class="form-grid">
+      <!-- Intitulé & localisation -->
+      <div class="field full">
+        <label for="job_title">Titre du poste *</label>
+        <input
+          type="text"
+          id="job_title"
+          name="job_title"
+          maxlength="255"
+          required
+          value="<%= ad.job_title %>"
+          placeholder="Développeur·se Full-stack JavaScript"
+        />
+      </div>
+
+      <div class="field full">
+        <label for="location">Localisation</label>
+        <input
+          type="text"
+          id="location"
+          name="location"
+          maxlength="255"
+          value="<%= ad.location || '' %>"
+          placeholder="Paris, Lyon, Remote…"
+        />
+      </div>
+
+      <!-- Descriptions -->
+      <div class="field full">
+        <label for="job_description">Description du poste</label>
+        <textarea
+          id="job_description"
+          name="job_description"
+          placeholder="Missions, contexte, équipe, outils…"
+        ><%= ad.job_description || '' %></textarea>
+      </div>
+
+      <div class="field full">
+        <label for="requirements">Besoins / Pré-requis</label>
+        <textarea
+          id="requirements"
+          name="requirements"
+          placeholder="Compétences techniques et soft skills attendues…"
+        ><%= ad.requirements || '' %></textarea>
+      </div>
+
+      <!-- Paramètres -->
+      <div class="field">
+        <label for="contract_type">Type de contrat *</label>
+        <select id="contract_type" name="contract_type" required>
+          <option value="cdi" <%= ad.contract_type === 'cdi' ? 'selected' : '' %>>CDI</option>
+          <option value="cdd" <%= ad.contract_type === 'cdd' ? 'selected' : '' %>>CDD</option>
+          <option value="interim" <%= ad.contract_type === 'interim' ? 'selected' : '' %>>Intérim</option>
+          <option value="stage" <%= ad.contract_type === 'stage' ? 'selected' : '' %>>Stage</option>
+          <option value="alternance" <%= ad.contract_type === 'alternance' ? 'selected' : '' %>>Alternance</option>
+          <option value="freelance" <%= ad.contract_type === 'freelance' ? 'selected' : '' %>>Freelance</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="working_time">Temps de travail</label>
+        <select id="working_time" name="working_time">
+          <option value="temps_plein" <%= ad.working_time === 'temps_plein' ? 'selected' : '' %>>Temps plein</option>
+          <option value="temps_partiel" <%= ad.working_time === 'temps_partiel' ? 'selected' : '' %>>Temps partiel</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="experience_level">Niveau d'expérience</label>
+        <select id="experience_level" name="experience_level">
+          <option value="non_precise" <%= ad.experience_level === 'non_precise' ? 'selected' : '' %>>Non précisé</option>
+          <option value="debutant" <%= ad.experience_level === 'debutant' ? 'selected' : '' %>>Débutant</option>
+          <option value="intermediaire" <%= ad.experience_level === 'intermediaire' ? 'selected' : '' %>>Intermédiaire</option>
+          <option value="confirme" <%= ad.experience_level === 'confirme' ? 'selected' : '' %>>Confirmé</option>
+          <option value="expert" <%= ad.experience_level === 'expert' ? 'selected' : '' %>>Expert</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="remote_option">Télétravail</label>
+        <select id="remote_option" name="remote_option">
+          <option value="non" <%= ad.remote_option === 'non' ? 'selected' : '' %>>Non</option>
+          <option value="hybride" <%= ad.remote_option === 'hybride' ? 'selected' : '' %>>Hybride</option>
+          <option value="full_remote" <%= ad.remote_option === 'full_remote' ? 'selected' : '' %>>Télétravail</option>
+        </select>
+      </div>
+
+      <!-- Salaire -->
+      <div class="field">
+        <label for="salary_min">Salaire minimum</label>
+        <input
+          type="number"
+          id="salary_min"
+          name="salary_min"
+          min="0"
+          step="500"
+          value="<%= ad.salary_min || '' %>"
+          placeholder="Ex. 35000"
+        />
+      </div>
+
+      <div class="field">
+        <label for="salary_max">Salaire maximum</label>
+        <input
+          type="number"
+          id="salary_max"
+          name="salary_max"
+          min="0"
+          step="500"
+          value="<%= ad.salary_max || '' %>"
+          placeholder="Ex. 45000"
+        />
+      </div>
+
+      <div class="field">
+        <label for="currency">Monnaie</label>
+        <select id="currency" name="currency">
+          <option value="EUR" <%= ad.currency === 'EUR' ? 'selected' : '' %>>EUR (€)</option>
+          <option value="USD" <%= ad.currency === 'USD' ? 'selected' : '' %>>USD ($)</option>
+          <option value="GBP" <%= ad.currency === 'GBP' ? 'selected' : '' %>>GBP (£)</option>
+        </select>
+      </div>
+
+      <!-- Deadline & statut -->
+      <div class="field">
+        <label for="deadline_date">Date limite</label>
+        <input
+          type="date"
+          id="deadline_date"
+          name="deadline_date"
+          value="<%= ad.deadline_date ? ad.deadline_date.toISOString().split('T')[0] : '' %>"
+        />
+      </div>
+
+      <div class="field">
+  <label for="status">Statut *</label>
+  <select id="status" name="status" required>
+    <option value="brouillon" <%= ad.status === 'brouillon' ? 'selected' : '' %>>Brouillon</option>
+    <option value="active" <%= ad.status === 'active' ? 'selected' : '' %>>Active</option>
+    <option value="fermee" <%= ad.status === 'fermee' ? 'selected' : '' %>>Fermée</option>
+  </select>
+</div>
+    </div>
+
+    <div class="btnbar">
+      <a class="btn btn-secondary" href="/ads/my-ads">Annuler</a>
+      <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+    </div>
+  </form>
+</main>
+
+<script>
+  document.getElementById("edit-ad-form").addEventListener("submit", function (e) {
+    const min = Number(document.getElementById("salary_min").value || 0);
+    const max = Number(document.getElementById("salary_max").value || 0);
+    if (min && max && min > max) {
+      e.preventDefault();
+      alert("Le salaire minimum ne peut pas être supérieur au salaire maximum.");
+      return;
+    }
+  });
+</script>

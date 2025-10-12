@@ -45,37 +45,42 @@
       </div>
 
       <div class="ad-actions">
-        <a href="/ads/<%= ad.ad_id %>/edit" class="btn btn-secondary"
-          >Modifier</a
-        >
-        <button class="btn btn-ghost js-delete" data-id="<%= ad.ad_id %>">
-          Supprimer
-        </button>
-        <% if (ad.status === 'active') { %>
-        <button
-          class="btn btn-ghost js-toggle-status"
-          data-id="<%= ad.ad_id %>"
-          data-status="fermee"
-        >
-          Fermer
-        </button>
-        <% } else if (ad.status === 'brouillon') { %>
-        <button
-          class="btn js-toggle-status"
-          data-id="<%= ad.ad_id %>"
-          data-status="active"
-        >
-          Publier
-        </button>
-        <% } else { %>
-        <button
-          class="btn js-toggle-status"
-          data-id="<%= ad.ad_id %>"
-          data-status="active"
-        >
-          Réactiver
-        </button>
-        <% } %>
+        <div class="ad-actions">
+          <a href="/ads/<%= ad.ad_id %>/candidatures" class="btn btn-primary"
+            >👥 Voir les candidatures</a
+          >
+          <a href="/ads/<%= ad.ad_id %>/edit" class="btn btn-secondary"
+            >Modifier</a
+          >
+          <button class="btn btn-ghost js-delete" data-id="<%= ad.ad_id %>">
+            Supprimer
+          </button>
+          <% if (ad.status === 'active') { %>
+          <button
+            class="btn btn-ghost js-toggle-status"
+            data-id="<%= ad.ad_id %>"
+            data-status="fermee"
+          >
+            Fermer
+          </button>
+          <% } else if (ad.status === 'brouillon') { %>
+          <button
+            class="btn js-toggle-status"
+            data-id="<%= ad.ad_id %>"
+            data-status="active"
+          >
+            Publier
+          </button>
+          <% } else { %>
+          <button
+            class="btn js-toggle-status"
+            data-id="<%= ad.ad_id %>"
+            data-status="active"
+          >
+            Réactiver
+          </button>
+          <% } %>
+        </div>
       </div>
     </article>
     <% }) %>

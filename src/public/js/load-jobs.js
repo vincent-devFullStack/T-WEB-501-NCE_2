@@ -248,13 +248,23 @@ async function loadJobs() {
     const applyBtn = e.target.closest("button.js-apply[data-id]");
     if (!applyBtn) return;
 
+    const id = Number(applyBtn.dataset.id);
+
+    // ✅ IMPORTANT : Mettre à jour l'ID dans le formulaire
+    const adIdField = document.getElementById("apply-ad-id");
+    if (adIdField) {
+      adIdField.value = id;
+      console.log("✅ Offre sélectionnée pour candidature:", id);
+    } else {
+      console.error("❌ Champ apply-ad-id introuvable");
+    }
+
     if (window.innerWidth >= 1025) {
-      const side = document.getElementById("sidebar-form-container");
+      const side = document.querySelector(".sidebar-form");
       if (side) side.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
 
-    const id = Number(applyBtn.dataset.id);
     const wrapper = document.querySelector(
       `.job-card-wrapper[data-id="${id}"]`
     );

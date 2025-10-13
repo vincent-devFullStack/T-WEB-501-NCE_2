@@ -79,11 +79,12 @@ async function buildNavbar() {
   let roleLinks = `<li><a href="/">Accueil</a></li>`;
   if (user.role === "candidat") {
     roleLinks += `
-      <li><a href="/profil">Trouver un job</a></li>
+      <li><a href="/profil">Toutes les offres</a></li>
       <li><a href="/entreprise">Trouver une entreprise</a></li>`;
   } else if (user.role === "recruteur") {
     roleLinks += `
-    <li><a href="/ads/my-ads">Mes offres</a></li>`;
+    <li><a href="/ads/my-ads">Mes offres</a></li>
+    <li><a href="/profil">Toutes les offres</a></li>`;
   } else if (user.role === "admin") {
     roleLinks += `<li><a href="/dashboard">Dashboard Admin</a></li>`;
   }

@@ -10,7 +10,8 @@
   padding: 60px 20px;
   margin-bottom: 50px;
   position: relative;
-  overflow: visible;
+  overflow: visible; /* Permet au dropdown de s'afficher */
+  z-index: 100; /* ← AJOUTÉ : passe au-dessus des autres sections */
 }
 
 .search-section::before {
@@ -32,12 +33,14 @@
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  overflow: visible; /* important pour le dropdown */
+  overflow: visible; /* Important pour le dropdown */
   border: 2px solid rgba(255, 255, 255, 0.2);
   position: relative;
   z-index: 1;
   isolation: isolate;
   transition: all 0.3s ease;
+  box-sizing: border-box; /* ← AJOUTÉ : pour le responsive */
+  width: 100%; /* ← AJOUTÉ */
 }
 
 .searchbar:hover {
@@ -56,6 +59,18 @@
   outline: none;
   min-width: 0;
   transition: background 0.2s ease;
+  border-radius: 0; /* ← AJOUTÉ */
+  box-sizing: border-box; /* ← AJOUTÉ */
+  
+  /* Empêcher le texte de déborder */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Premier input : arrondi à gauche */
+.searchbar input[type="text"]:first-child {
+  border-radius: 10px 0 0 10px; /* ← AJOUTÉ */
 }
 
 .searchbar input[type="text"]::placeholder {
@@ -67,9 +82,9 @@
   background: #f9fafb;
 }
 
-/* Séparateurs */
+/* Séparateurs verticaux */
 .searchbar input[type="text"]:not(:last-of-type) {
-  border-right: 2px solid #f3f4f6;
+  border-right: 1px solid #e5e7eb; /* ← MODIFIÉ : 1px au lieu de 2px */
 }
 
 /* Dropdown Type de contrat */
@@ -77,8 +92,9 @@
   position: relative;
   display: flex;
   align-items: center;
-  border-right: 2px solid #f3f4f6;
-  z-index: 2;
+  border-right: 1px solid #e5e7eb; /* ← MODIFIÉ : 1px au lieu de 2px */
+  z-index: 10; /* ← MODIFIÉ : plus élevé */
+  overflow: visible; /* ← AJOUTÉ */
 }
 
 .dropdown-check .dropbtn {
@@ -109,11 +125,11 @@
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
   border-radius: 12px;
   min-width: 240px;
-  z-index: 1000;
+  z-index: 9999; /* ← MODIFIÉ : très élevé */
   padding: 8px;
   border: 1px solid #e5e7eb;
 
-  /* caché par défaut */
+  /* Caché par défaut */
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
@@ -166,7 +182,7 @@
   transition: all 0.3s ease;
   white-space: nowrap;
   position: relative;
-  border-radius: 0 12px 12px 0; /* arrondi à droite */
+  border-radius: 0 10px 10px 0; /* ← MODIFIÉ : arrondi à droite uniquement */
   overflow: hidden;
 }
 
@@ -205,12 +221,15 @@
 @media (max-width: 968px) {
   .search-section {
     padding: 40px 16px;
+    box-sizing: border-box; /* ← AJOUTÉ */
   }
 
   .searchbar {
     flex-direction: column;
     gap: 0;
     border-radius: 12px;
+    width: 100%;
+    box-sizing: border-box; /* ← AJOUTÉ */
   }
 
   .searchbar input[type="text"],
@@ -218,13 +237,19 @@
   .btn-search {
     width: 100%;
     border-right: none;
-    border-bottom: 2px solid #f3f4f6;
+    border-bottom: 1px solid #e5e7eb; /* ← MODIFIÉ : 1px */
     border-radius: 0;
+    box-sizing: border-box; /* ← AJOUTÉ */
+  }
+
+  /* Premier input : arrondi en haut en mobile */
+  .searchbar input[type="text"]:first-child {
+    border-radius: 12px 12px 0 0; /* ← AJOUTÉ */
   }
 
   .btn-search {
     border-bottom: none;
-    border-radius: 0 0 12px 12px; /* arrondi bas en mobile */
+    border-radius: 0 0 12px 12px; /* Arrondi bas en mobile */
   }
 
   .dropdown-check .dropdown-content {

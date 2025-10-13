@@ -10,6 +10,8 @@ header {
   z-index: 1000;
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transform: translateY(0);
 }
 
 .header-container {
@@ -161,7 +163,7 @@ header {
 
 /* Affichage du menu uniquement si .open */
 #navbar .dropdown-content {
-  display: none !important; /* n'affecte que le menu du NAVBAR */
+  display: none !important;
   position: absolute;
   right: 0;
   background: var(--card);
@@ -238,11 +240,6 @@ header {
 }
 
 /* Animation au scroll - navbar qui se cache */
-header {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  transform: translateY(0);
-}
-
 header.navbar-hidden {
   transform: translateY(-100%);
   box-shadow: none;
@@ -250,6 +247,32 @@ header.navbar-hidden {
 
 header.scrolled {
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Pour les liens dans la navbar avec badge */
+.nav-link-with-badge {
+  position: relative;
+  display: inline-block;
+}
+
+.notification-badge {
+  display: inline-flex !important;
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444 !important;
+  color: white !important;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 12px;
+  min-width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  line-height: 1;
 }
 
 /* Responsive */
@@ -267,9 +290,4 @@ header.scrolled {
     padding: 8px 16px;
     font-size: 14px;
   }
-}
-
-/* Animation au scroll */
-header.scrolled {
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }

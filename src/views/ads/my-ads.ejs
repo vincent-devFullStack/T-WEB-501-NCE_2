@@ -18,7 +18,7 @@
   <% } else { %>
   <div class="ads-list">
     <% ads.forEach(ad => { %>
-    <article class="ad-card">
+    <article class="ad-card" data-ad-id="<%= ad.ad_id %>">
       <div class="ad-header">
         <div>
           <h3><%= ad.job_title %></h3>
@@ -45,42 +45,48 @@
       </div>
 
       <div class="ad-actions">
-        <div class="ad-actions">
-          <a href="/ads/<%= ad.ad_id %>/candidatures" class="btn btn-primary"
-            >👥 Voir les candidatures</a
-          >
-          <a href="/ads/<%= ad.ad_id %>/edit" class="btn btn-secondary"
-            >Modifier</a
-          >
-          <button class="btn btn-ghost js-delete" data-id="<%= ad.ad_id %>">
-            Supprimer
-          </button>
-          <% if (ad.status === 'active') { %>
-          <button
-            class="btn btn-ghost js-toggle-status"
-            data-id="<%= ad.ad_id %>"
-            data-status="fermee"
-          >
-            Fermer
-          </button>
-          <% } else if (ad.status === 'brouillon') { %>
-          <button
-            class="btn js-toggle-status"
-            data-id="<%= ad.ad_id %>"
-            data-status="active"
-          >
-            Publier
-          </button>
-          <% } else { %>
-          <button
-            class="btn js-toggle-status"
-            data-id="<%= ad.ad_id %>"
-            data-status="active"
-          >
-            Réactiver
-          </button>
-          <% } %>
-        </div>
+        <a
+          href="/ads/<%= ad.ad_id %>/candidatures"
+          class="btn btn-primary"
+          style="position: relative"
+        >
+          👥 Voir les candidatures
+          <span
+            class="notification-badge"
+            data-ad-notification="<%= ad.ad_id %>"
+          ></span>
+        </a>
+        <a href="/ads/<%= ad.ad_id %>/edit" class="btn btn-secondary"
+          >Modifier</a
+        >
+        <button class="btn btn-ghost js-delete" data-id="<%= ad.ad_id %>">
+          Supprimer
+        </button>
+        <% if (ad.status === 'active') { %>
+        <button
+          class="btn btn-ghost js-toggle-status"
+          data-id="<%= ad.ad_id %>"
+          data-status="fermee"
+        >
+          Fermer
+        </button>
+        <% } else if (ad.status === 'brouillon') { %>
+        <button
+          class="btn js-toggle-status"
+          data-id="<%= ad.ad_id %>"
+          data-status="active"
+        >
+          Publier
+        </button>
+        <% } else { %>
+        <button
+          class="btn js-toggle-status"
+          data-id="<%= ad.ad_id %>"
+          data-status="active"
+        >
+          Réactiver
+        </button>
+        <% } %>
       </div>
     </article>
     <% }) %>
@@ -88,6 +94,7 @@
   <% } %>
 </main>
 
+<script src="/js/notifications.js"></script>
 <script type="module" src="/js/navbar.js"></script>
 <script>
   document.querySelectorAll(".js-delete").forEach((btn) => {

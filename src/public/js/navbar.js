@@ -83,8 +83,11 @@ async function buildNavbar() {
       <li><a href="/entreprise">Trouver une entreprise</a></li>`;
   } else if (user.role === "recruteur") {
     roleLinks += `
-    <li><a href="/ads/my-ads">Mes offres</a></li>
-    <li><a href="/profil">Toutes les offres</a></li>`;
+      <li class="nav-link-with-badge">
+        <a href="/ads/my-ads">Mes offres</a>
+        <span class="notification-badge global-notification-badge"></span>
+      </li>
+      <li><a href="/profil">Toutes les offres</a></li>`;
   } else if (user.role === "admin") {
     roleLinks += `<li><a href="/dashboard">Dashboard Admin</a></li>`;
   }
@@ -102,11 +105,11 @@ async function buildNavbar() {
               ? '<a href="/mes-candidatures" role="menuitem">Mes candidatures</a>'
               : ""
           }
-${
-  user.role === "recruteur"
-    ? '<a href="/ads/my-ads" role="menuitem">Mes offres</a>'
-    : ""
-}
+          ${
+            user.role === "recruteur"
+              ? '<a href="/ads/my-ads" role="menuitem">Mes offres</a>'
+              : ""
+          }
           <button id="logoutBtn" class="linklike" role="menuitem">Déconnexion</button>
         </div>
       </div>
@@ -160,7 +163,7 @@ if (document.readyState === "loading") {
 
 // --- Auto-hide navbar on scroll ---
 let lastScrollTop = 0;
-let scrollThreshold = 5; // Pixels minimum pour déclencher l'action
+let scrollThreshold = 5;
 let isScrolling;
 
 function handleNavbarScroll() {
@@ -170,31 +173,25 @@ function handleNavbarScroll() {
   const currentScroll =
     window.pageYOffset || document.documentElement.scrollTop;
 
-  // Ajouter la classe 'scrolled' quand on scroll un peu
   if (currentScroll > 50) {
     header.classList.add("scrolled");
   } else {
     header.classList.remove("scrolled");
   }
 
-  // Éviter les petits mouvements involontaires
   if (Math.abs(currentScroll - lastScrollTop) < scrollThreshold) {
     return;
   }
 
-  // Scroll vers le bas - cacher la navbar
   if (currentScroll > lastScrollTop && currentScroll > 100) {
     header.classList.add("navbar-hidden");
-  }
-  // Scroll vers le haut - montrer la navbar
-  else if (currentScroll < lastScrollTop) {
+  } else if (currentScroll < lastScrollTop) {
     header.classList.remove("navbar-hidden");
   }
 
   lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
 }
 
-// Debounce pour optimiser les performances
 window.addEventListener("scroll", () => {
   window.clearTimeout(isScrolling);
   isScrolling = setTimeout(() => {
@@ -202,5 +199,4 @@ window.addEventListener("scroll", () => {
   }, 10);
 });
 
-// Appel initial
 handleNavbarScroll();

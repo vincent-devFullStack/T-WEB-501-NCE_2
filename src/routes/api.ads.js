@@ -62,6 +62,127 @@ function toDbStatus(input) {
 }
 
 // ------------------------------------------------------------------
+// ⚠️ IMPORTANT : Routes spécifiques AVANT les routes avec :id
+// ------------------------------------------------------------------
+
+// ------------------------------------------------------------------
+// GET /api/ads/notifications/count - Compter les candidatures non traitées (recruteur)
+// ------------------------------------------------------------------
+router.get(
+  "/notifications/count",
+  requireAuth,
+  requireRole("recruteur"),
+  async (req, res) => {
+    try {
+      const [[result]] = await pool.query(
+        `SELECT COUNT(*) as count
+         FROM applications ap
+         JOIN advertisements ad ON ap.ad_id = ad.ad_id
+         WHERE ad.contact_person_id = ? AND ap.status = 'recu'`,
+        [req.user.id]
+      );
+
+      res.json({ count: result.count || 0 });
+    } catch (e) {
+      console.error("Erreur notifications count:", e);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+);
+
+// ------------------------------------------------------------------
+// PATCH /api/ads/applications/:id - Modifier le statut d'une candidature (Kanban)
+// ------------------------------------------------------------------
+router.patch(
+  "/applications/:id",
+  requireAuth,
+  requireRole("recruteur"),
+  async (req, res) => {
+    try {
+      const appId = Number(req.params.id);
+      const { status } = req.body;
+
+      // Statuts valides pour le kanban
+      const validStatuses = [
+        "recu",
+        "a_appeler",
+        "a_recevoir",
+        "refuse",
+        "recrute",
+      ];
+
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: "Statut invalide" });
+      }
+
+      // Vérifier que la candidature appartient à une offre du recruteur
+      const [[app]] = await pool.query(
+        `SELECT ap.* FROM applications ap
+         JOIN advertisements ad ON ap.ad_id = ad.ad_id
+         WHERE ap.application_id = ? AND ad.contact_person_id = ?`,
+        [appId, req.user.id]
+      );
+
+      if (!app) {
+        return res.status(403).json({ error: "Non autorisé" });
+      }
+
+      // Mettre à jour le statut
+      await pool.query(
+        "UPDATE applications SET status = ? WHERE application_id = ?",
+        [status, appId]
+      );
+
+      res.json({ ok: true, message: "Statut mis à jour" });
+    } catch (e) {
+      console.error("Erreur update status:", e);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+);
+
+// ------------------------------------------------------------------
+// Routes avec :id (doivent être APRÈS les routes spécifiques)
+// ------------------------------------------------------------------
+
+// ------------------------------------------------------------------
+// GET /api/ads/:id/notifications/count - Compter les candidatures "reçues" pour une offre
+// ------------------------------------------------------------------
+router.get(
+  "/:id/notifications/count",
+  requireAuth,
+  requireRole("recruteur"),
+  async (req, res) => {
+    try {
+      const adId = Number(req.params.id);
+
+      // Vérifier que l'offre appartient au recruteur
+      const [[ad]] = await pool.query(
+        "SELECT ad_id FROM advertisements WHERE ad_id = ? AND contact_person_id = ?",
+        [adId, req.user.id]
+      );
+
+      if (!ad) {
+        return res.status(403).json({ error: "Non autorisé" });
+      }
+
+      // Compter les candidatures avec statut 'recu'
+      const [[result]] = await pool.query(
+        `SELECT COUNT(*) as count
+         FROM applications 
+         WHERE ad_id = ? AND status = 'recu'`,
+        [adId]
+      );
+
+      res.json({ count: result.count || 0 });
+    } catch (e) {
+      console.error("Erreur notifications count:", e);
+      res.status(500).json({ error: "Erreur serveur" });
+    }
+  }
+);
+
+// ------------------------------------------------------------------
 // Vérifier si l'utilisateur a déjà postulé (sauf si refusé)
 // ------------------------------------------------------------------
 router.get("/:id/check-applied", async (req, res) => {
@@ -208,57 +329,6 @@ router.delete(
       res.json({ ok: true });
     } catch (e) {
       console.error(e);
-      res.status(500).json({ error: "Erreur serveur" });
-    }
-  }
-);
-
-// ------------------------------------------------------------------
-// PATCH /api/ads/applications/:id - Modifier le statut d'une candidature (Kanban)
-// ------------------------------------------------------------------
-router.patch(
-  "/applications/:id",
-  requireAuth,
-  requireRole("recruteur"),
-  async (req, res) => {
-    try {
-      const appId = Number(req.params.id);
-      const { status } = req.body;
-
-      // Statuts valides pour le kanban
-      const validStatuses = [
-        "recu",
-        "a_appeler",
-        "a_recevoir",
-        "refuse",
-        "recrute",
-      ];
-
-      if (!validStatuses.includes(status)) {
-        return res.status(400).json({ error: "Statut invalide" });
-      }
-
-      // Vérifier que la candidature appartient à une offre du recruteur
-      const [[app]] = await pool.query(
-        `SELECT ap.* FROM applications ap
-         JOIN advertisements ad ON ap.ad_id = ad.ad_id
-         WHERE ap.application_id = ? AND ad.contact_person_id = ?`,
-        [appId, req.user.id]
-      );
-
-      if (!app) {
-        return res.status(403).json({ error: "Non autorisé" });
-      }
-
-      // Mettre à jour le statut
-      await pool.query(
-        "UPDATE applications SET status = ? WHERE application_id = ?",
-        [status, appId]
-      );
-
-      res.json({ ok: true, message: "Statut mis à jour" });
-    } catch (e) {
-      console.error("Erreur update status:", e);
       res.status(500).json({ error: "Erreur serveur" });
     }
   }

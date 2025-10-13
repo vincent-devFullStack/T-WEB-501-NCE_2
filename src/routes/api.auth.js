@@ -34,7 +34,7 @@ r.get("/me", async (req, res) => {
     const [rows] = await pool.query(
       `
       SELECT
-        p.person_id, p.first_name, p.last_name, p.email,
+        p.person_id, p.first_name, p.last_name, p.email, p.phone,
         p.person_type AS role, p.company_id,
         c.company_name AS company_name
       FROM people p
@@ -83,21 +83,17 @@ r.post("/register", async (req, res) => {
     if (person_type === "recruteur") {
       // If no company provided at all, refuse; or allow later via /api/account/company
       if (!finalCompanyId && !company_name) {
-        return res
-          .status(400)
-          .json({
-            error: "Le nom de l’entreprise est requis pour un recruteur.",
-          });
+        return res.status(400).json({
+          error: "Le nom de l’entreprise est requis pour un recruteur.",
+        });
       }
 
       if (!finalCompanyId && company_name) {
         const cname = String(company_name).trim();
         if (!cname) {
-          return res
-            .status(400)
-            .json({
-              error: "Le nom de l’entreprise est requis pour un recruteur.",
-            });
+          return res.status(400).json({
+            error: "Le nom de l’entreprise est requis pour un recruteur.",
+          });
         }
 
         // try reuse existing by name (case-insensitive)

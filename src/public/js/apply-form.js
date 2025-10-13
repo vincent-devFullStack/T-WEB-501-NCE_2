@@ -12,6 +12,47 @@ async function getUserInfo() {
   }
 }
 
+// Vérifier si l'utilisateur a déjà postulé à une offre
+async function checkIfAlreadyApplied(adId) {
+  try {
+    const r = await fetch(`/api/ads/${adId}/check-applied`, {
+      credentials: "include",
+    });
+    if (!r.ok) return false;
+    const data = await r.json();
+    return data.already_applied || false;
+  } catch {
+    return false;
+  }
+}
+
+// Activer le formulaire quand une offre est sélectionnée
+function enableApplicationForm(adId, alreadyApplied = false) {
+  const fieldset = document.getElementById("apply-fieldset");
+  const submitBtn = fieldset?.querySelector('button[type="submit"]');
+  const adIdInput = document.getElementById("apply-ad-id");
+
+  if (adIdInput) adIdInput.value = adId;
+
+  if (fieldset) {
+    if (alreadyApplied) {
+      // Désactiver le formulaire et changer le bouton
+      fieldset.disabled = true;
+      if (submitBtn) {
+        submitBtn.textContent = "✓ Déjà postulé";
+        submitBtn.style.backgroundColor = "#6c757d";
+      }
+    } else {
+      // Activer le formulaire
+      fieldset.disabled = false;
+      if (submitBtn) {
+        submitBtn.textContent = "Envoyer la candidature";
+        submitBtn.style.backgroundColor = "";
+      }
+    }
+  }
+}
+
 // Pré-remplir le formulaire avec les données de l'utilisateur
 async function prefillApplicationForm() {
   const user = await getUserInfo();
@@ -35,9 +76,15 @@ async function prefillApplicationForm() {
     emailField.value = user.email;
   }
 
-  // Pré-remplir le téléphone
+  // Pré-remplir le téléphone avec un délai
   if (phoneField && user.phone) {
     phoneField.value = user.phone;
+
+    setTimeout(() => {
+      phoneField.value = user.phone;
+      phoneField.dispatchEvent(new Event("input", { bubbles: true }));
+      phoneField.dispatchEvent(new Event("change", { bubbles: true }));
+    }, 100);
   }
 }
 
@@ -82,6 +129,9 @@ if (applyForm) {
         statusEl.textContent = "✅ Candidature envoyée avec succès !";
         statusEl.className = "form-status success";
 
+        // Changer le bouton en "Déjà postulé"
+        enableApplicationForm(adId, true);
+
         // Réinitialiser seulement certains champs
         document.getElementById("apply-cv").value = "";
         const messageField = document.getElementById("apply-message");
@@ -109,3 +159,7 @@ if (document.readyState === "loading") {
 } else {
   prefillApplicationForm();
 }
+
+// Exposer la fonction globalement pour les boutons "Candidature rapide"
+window.enableApplicationForm = enableApplicationForm;
+window.checkIfAlreadyApplied = checkIfAlreadyApplied;

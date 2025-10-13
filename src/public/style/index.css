@@ -551,6 +551,7 @@
 }
 .sidebar-form h3 {
   margin-bottom: 12px;
+  text-align: center;
 }
 
 /* Sidebar formulaire */
@@ -580,6 +581,51 @@
 .sidebar-form .btn {
   width: 100%;
   margin-top: 8px;
+}
+
+/* ==============================
+   FORCER LE STYLE GRIS DU BOUTON DÉSACTIVÉ
+   ============================== */
+
+/* Cibler le fieldset désactivé */
+fieldset#apply-fieldset:disabled,
+fieldset#apply-fieldset[disabled] {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Cibler spécifiquement le bouton dans le fieldset désactivé */
+fieldset#apply-fieldset:disabled button.btn,
+fieldset#apply-fieldset[disabled] button.btn,
+fieldset#apply-fieldset:disabled #apply-submit-btn,
+fieldset#apply-fieldset[disabled] #apply-submit-btn {
+  background: #9ca3af !important;
+  background-color: #9ca3af !important;
+  color: #6b7280 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+/* Désactiver absolument tous les hovers */
+fieldset#apply-fieldset:disabled button.btn:hover,
+fieldset#apply-fieldset[disabled] button.btn:hover,
+fieldset#apply-fieldset:disabled #apply-submit-btn:hover,
+fieldset#apply-fieldset[disabled] #apply-submit-btn:hover {
+  background: #9ca3af !important;
+  background-color: #9ca3af !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Surcharger les styles de .sidebar-form .btn si nécessaire */
+.sidebar-form fieldset:disabled .btn,
+.sidebar-form fieldset[disabled] .btn {
+  background: #9ca3af !important;
+  background-color: #9ca3af !important;
+  color: #6b7280 !important;
 }
 
 @media (max-width: 1024px) {

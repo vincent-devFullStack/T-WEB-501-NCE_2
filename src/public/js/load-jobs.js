@@ -1,16 +1,65 @@
 // /public/js/load-jobs.js
-// (peut être chargé en <script type="module">)
 
 async function fetchAds() {
   try {
     const r = await fetch("/api/ads", { credentials: "include" });
     if (!r.ok) throw new Error(await r.text());
     const data = await r.json();
-    // Attendu: { ads: [...] } ou directement [...]
     return Array.isArray(data) ? data : data.ads || [];
   } catch (e) {
     console.error("fetchAds error:", e);
     return [];
+  }
+}
+
+// Vérifier si l'utilisateur a déjà postulé
+async function checkIfAlreadyApplied(adId) {
+  try {
+    const r = await fetch(`/api/ads/${adId}/check-applied`, {
+      credentials: "include",
+    });
+    if (!r.ok) return false;
+    const data = await r.json();
+    return data.already_applied || false;
+  } catch {
+    return false;
+  }
+}
+
+// Fonction pour activer le formulaire et afficher les infos de l'offre
+function enableApplicationForm(adId, ad, alreadyApplied = false) {
+  const fieldset = document.getElementById("apply-fieldset");
+  const submitBtn = document.getElementById("apply-submit-btn");
+  const adIdInput = document.getElementById("apply-ad-id");
+  const jobInfo = document.getElementById("apply-job-info");
+  const jobTitle = document.getElementById("apply-job-title");
+  const companyName = document.getElementById("apply-company-name");
+
+  if (adIdInput) adIdInput.value = adId;
+
+  // Afficher les informations de l'offre
+  if (jobInfo && jobTitle && companyName && ad) {
+    jobTitle.textContent = ad.job_title || "";
+    companyName.textContent = ad.company_name || "";
+    jobInfo.style.display = "block";
+  }
+
+  if (fieldset) {
+    if (alreadyApplied) {
+      // Désactiver le formulaire
+      fieldset.disabled = true;
+      if (submitBtn) {
+        submitBtn.textContent = "✓ Déjà postulé";
+        submitBtn.style.backgroundColor = "#6c757d";
+      }
+    } else {
+      // Activer le formulaire
+      fieldset.disabled = false;
+      if (submitBtn) {
+        submitBtn.textContent = "Envoyer la candidature";
+        submitBtn.style.backgroundColor = "";
+      }
+    }
   }
 }
 
@@ -161,7 +210,7 @@ async function loadJobs() {
   // ---------- Evénements (délégation sur le container) ----------
 
   // Déployer / replier les détails
-  wrap.addEventListener("click", (e) => {
+  wrap.addEventListener("click", async (e) => {
     const moreBtn = e.target.closest("button.js-more[data-id]");
     if (!moreBtn) return;
 
@@ -192,6 +241,14 @@ async function loadJobs() {
     card.querySelector(".job-card-actions")?.remove();
     const salary = formatSalary(ad.salary_min, ad.salary_max, ad.currency);
 
+    // ✅ Vérifier si déjà postulé AVANT d'insérer le HTML
+    const alreadyApplied = await checkIfAlreadyApplied(id);
+
+    // ✅ Adapter le bouton selon le statut
+    const applyButtonHTML = alreadyApplied
+      ? `<button class="btn btn-apply js-apply" data-id="${id}" disabled style="background-color: #1fa435ff; transition:none; transform:none; box-shadow:none; pointer-events:none;">Déjà postulé ✓</button>`
+      : `<button class="btn btn-apply js-apply" data-id="${id}">Candidature rapide</button>`;
+
     card.insertAdjacentHTML(
       "beforeend",
       `
@@ -217,7 +274,7 @@ async function loadJobs() {
         : ""
     }
     <div class="job-details-actions">
-      <button class="btn btn-apply js-apply" data-id="${id}">Candidature rapide</button>
+      ${applyButtonHTML}
       <button class="btn btn-secondary js-close-details" data-id="${id}">Réduire</button>
     </div>
   </div>
@@ -243,21 +300,26 @@ async function loadJobs() {
     }
   });
 
-  // "Candidature rapide" -> flip mobile ou scroll sidebar desktop
-  wrap.addEventListener("click", (e) => {
+  // "Candidature rapide" -> vérifier si déjà postulé et activer le formulaire
+  wrap.addEventListener("click", async (e) => {
     const applyBtn = e.target.closest("button.js-apply[data-id]");
     if (!applyBtn) return;
 
     const id = Number(applyBtn.dataset.id);
 
-    // ✅ IMPORTANT : Mettre à jour l'ID dans le formulaire
-    const adIdField = document.getElementById("apply-ad-id");
-    if (adIdField) {
-      adIdField.value = id;
-      console.log("✅ Offre sélectionnée pour candidature:", id);
-    } else {
-      console.error("❌ Champ apply-ad-id introuvable");
+    // Si le bouton est déjà désactivé (déjà postulé), ne rien faire
+    if (applyBtn.disabled) {
+      return;
     }
+
+    // Trouver l'annonce correspondante
+    const ad = ads.find((x) => x.ad_id === id);
+
+    // Vérifier si déjà postulé
+    const alreadyApplied = await checkIfAlreadyApplied(id);
+
+    // Activer le formulaire avec les infos de l'offre
+    enableApplicationForm(id, ad, alreadyApplied);
 
     if (window.innerWidth >= 1025) {
       const side = document.querySelector(".sidebar-form");

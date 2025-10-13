@@ -2,57 +2,74 @@
 <form id="quick-apply-form" class="quick-apply" enctype="multipart/form-data">
   <input type="hidden" name="ad_id" id="apply-ad-id" value="" />
 
-  <div class="field">
-    <label>Nom complet *</label>
-    <input
-      type="text"
-      id="apply-name"
-      name="full_name"
-      required
-      placeholder="Jean Dupont"
-    />
+  <!-- Affichage du nom de l'entreprise quand une offre est sélectionnée -->
+  <div id="apply-job-info" class="apply-job-info" style="display: none">
+    <p class="selected-job">
+      <strong>Candidature pour :</strong> <span id="apply-job-title"></span
+      ><br />
+      <strong>Entreprise :</strong> <span id="apply-company-name"></span>
+    </p>
   </div>
-  <div class="field">
-    <label>Email *</label>
-    <input
-      type="email"
-      id="apply-email"
-      name="email"
-      required
-      placeholder="jean.dupont@email.com"
-    />
-  </div>
-  <div class="field">
-    <label>Téléphone *</label>
-    <input
-      type="tel"
-      id="apply-phone"
-      name="phone"
-      required
-      placeholder="06 12 34 56 78"
-    />
-  </div>
-  <div class="field">
-    <label>CV (PDF, max 5Mo) *</label>
-    <input
-      type="file"
-      id="apply-cv"
-      name="cv"
-      accept="application/pdf"
-      required
-    />
-  </div>
-  <% if (showMessage) { %>
-  <div class="field">
-    <label>Message de motivation</label>
-    <textarea
-      id="apply-message"
-      name="message"
-      rows="5"
-      placeholder="Parlez-nous de vous..."
-    ></textarea>
-  </div>
-  <% } %>
-  <button class="btn" type="submit">Envoyer la candidature</button>
+
+  <fieldset id="apply-fieldset" disabled>
+    <div class="field">
+      <label>Nom complet *</label>
+      <input
+        type="text"
+        id="apply-name"
+        name="full_name"
+        required
+        placeholder="Jean Dupont"
+      />
+    </div>
+    <div class="field">
+      <label>Email *</label>
+      <input
+        type="email"
+        id="apply-email"
+        name="email"
+        required
+        placeholder="jean.dupont@email.com"
+      />
+    </div>
+    <div class="field">
+      <label>Téléphone *</label>
+      <input
+        type="tel"
+        id="apply-phone"
+        name="phone"
+        required
+        placeholder="06 12 34 56 78"
+        autocomplete="off"
+      />
+    </div>
+    <div class="field">
+      <label>CV (PDF, max 5Mo) *</label>
+      <input
+        type="file"
+        id="apply-cv"
+        name="cv"
+        accept="application/pdf"
+        required
+      />
+    </div>
+    <% if (showMessage) { %>
+    <div class="field">
+      <label>Message de motivation</label>
+      <textarea
+        id="apply-message"
+        name="message"
+        rows="5"
+        placeholder="Parlez-nous de vous..."
+      ></textarea>
+    </div>
+    <% } %>
+
+    <p class="field-note">* Champs obligatoires</p>
+
+    <button class="btn" type="submit" id="apply-submit-btn">
+      Envoyer la candidature
+    </button>
+  </fieldset>
   <p class="form-status" id="apply-status"></p>
 </form>

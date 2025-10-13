@@ -237,6 +237,21 @@ header {
   letter-spacing: 0.5px;
 }
 
+/* Animation au scroll - navbar qui se cache */
+header {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transform: translateY(0);
+}
+
+header.navbar-hidden {
+  transform: translateY(-100%);
+  box-shadow: none;
+}
+
+header.scrolled {
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .header-container {

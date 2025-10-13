@@ -3,27 +3,13 @@ import { Router } from "express";
 import { pool } from "../config/db.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import multer from "multer";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { storage } from "../config/cloudinary.js";
 
 const router = Router();
 
 // ------------------------------------------------------------------
-// Configuration de multer pour l'upload de CV
+// Configuration de multer avec Cloudinary
 // ------------------------------------------------------------------
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../../uploads/cv"));
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, "cv-" + uniqueSuffix + ".pdf");
-  },
-});
-
 const upload = multer({
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
@@ -76,6 +62,31 @@ function toDbStatus(input) {
 }
 
 // ------------------------------------------------------------------
+// Vérifier si l'utilisateur a déjà postulé (sauf si refusé)
+// ------------------------------------------------------------------
+router.get("/:id/check-applied", async (req, res) => {
+  try {
+    if (!req.user?.id) {
+      return res.json({ already_applied: false });
+    }
+
+    // Vérifier s'il existe une candidature NON refusée
+    const [rows] = await pool.query(
+      `SELECT application_id, status
+       FROM applications 
+       WHERE ad_id = ? AND person_id = ? AND status != 'refuse'
+       LIMIT 1`,
+      [req.params.id, req.user.id]
+    );
+
+    return res.json({ already_applied: rows.length > 0 });
+  } catch (e) {
+    console.error("Check applied error:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
+// ------------------------------------------------------------------
 // POST /api/ads/:id/apply - Soumettre une candidature
 // ------------------------------------------------------------------
 router.post("/:id/apply", upload.single("cv"), async (req, res) => {
@@ -93,7 +104,9 @@ router.post("/:id/apply", upload.single("cv"), async (req, res) => {
     }
 
     const { full_name, email, phone, message } = req.body;
-    const cvPath = req.file ? `/uploads/cv/${req.file.filename}` : null;
+
+    // Cloudinary retourne l'URL dans req.file.path
+    const cvPath = req.file ? req.file.path : null;
 
     // Validation
     if (!full_name || !email || !phone || !cvPath) {
@@ -118,7 +131,7 @@ router.post("/:id/apply", upload.single("cv"), async (req, res) => {
         const lastName = lastNameParts.join(" ") || "";
 
         const [result] = await pool.query(
-          `INSERT INTO people (email, first_name, last_name, phone, role, created_at)
+          `INSERT INTO people (email, first_name, last_name, phone, person_type, created_at)
            VALUES (?, ?, ?, ?, 'candidat', NOW())`,
           [email, firstName, lastName, phone]
         );
@@ -126,11 +139,39 @@ router.post("/:id/apply", upload.single("cv"), async (req, res) => {
       }
     }
 
-    // Créer la candidature
+    // Vérifier s'il existe déjà une candidature pour cette offre
+    const [[existingApp]] = await pool.query(
+      `SELECT application_id, status 
+       FROM applications 
+       WHERE ad_id = ? AND person_id = ?
+       LIMIT 1`,
+      [adId, personId]
+    );
+
+    if (existingApp) {
+      // Si la candidature existe mais n'est PAS refusée, bloquer
+      if (existingApp.status !== "refuse") {
+        return res.status(409).json({
+          error: "Vous avez déjà postulé à cette offre",
+        });
+      }
+
+      // Si refusée, mettre à jour l'ancienne candidature
+      await pool.query(
+        `UPDATE applications 
+         SET cv_path = ?, cover_letter = ?, status = 'recu', application_date = NOW()
+         WHERE application_id = ?`,
+        [cvPath, message || null, existingApp.application_id]
+      );
+
+      return res.json({ ok: true, message: "Candidature envoyée avec succès" });
+    }
+
+    // Sinon, créer une nouvelle candidature
     await pool.query(
       `INSERT INTO applications 
        (ad_id, person_id, cv_path, cover_letter, status, application_date)
-       VALUES (?, ?, ?, ?, 'soumise', NOW())`,
+       VALUES (?, ?, ?, ?, 'recu', NOW())`,
       [adId, personId, cvPath, message || null]
     );
 
@@ -173,7 +214,7 @@ router.delete(
 );
 
 // ------------------------------------------------------------------
-// PATCH /api/ads/applications/:id - Modifier le statut d'une candidature
+// PATCH /api/ads/applications/:id - Modifier le statut d'une candidature (Kanban)
 // ------------------------------------------------------------------
 router.patch(
   "/applications/:id",
@@ -184,13 +225,15 @@ router.patch(
       const appId = Number(req.params.id);
       const { status } = req.body;
 
+      // Statuts valides pour le kanban
       const validStatuses = [
-        "soumise",
-        "en_revision",
-        "entretien_prevu",
-        "rejetee",
-        "acceptee",
+        "recu",
+        "a_appeler",
+        "a_recevoir",
+        "refuse",
+        "recrute",
       ];
+
       if (!validStatuses.includes(status)) {
         return res.status(400).json({ error: "Statut invalide" });
       }
@@ -198,8 +241,8 @@ router.patch(
       // Vérifier que la candidature appartient à une offre du recruteur
       const [[app]] = await pool.query(
         `SELECT ap.* FROM applications ap
-       JOIN advertisements ad ON ap.ad_id = ad.ad_id
-       WHERE ap.application_id = ? AND ad.contact_person_id = ?`,
+         JOIN advertisements ad ON ap.ad_id = ad.ad_id
+         WHERE ap.application_id = ? AND ad.contact_person_id = ?`,
         [appId, req.user.id]
       );
 
@@ -207,14 +250,15 @@ router.patch(
         return res.status(403).json({ error: "Non autorisé" });
       }
 
+      // Mettre à jour le statut
       await pool.query(
         "UPDATE applications SET status = ? WHERE application_id = ?",
         [status, appId]
       );
 
-      res.json({ ok: true });
+      res.json({ ok: true, message: "Statut mis à jour" });
     } catch (e) {
-      console.error(e);
+      console.error("Erreur update status:", e);
       res.status(500).json({ error: "Erreur serveur" });
     }
   }

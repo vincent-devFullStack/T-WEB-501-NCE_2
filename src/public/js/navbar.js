@@ -157,3 +157,50 @@ if (document.readyState === "loading") {
 } else {
   buildNavbar();
 }
+
+// --- Auto-hide navbar on scroll ---
+let lastScrollTop = 0;
+let scrollThreshold = 5; // Pixels minimum pour déclencher l'action
+let isScrolling;
+
+function handleNavbarScroll() {
+  const header = document.querySelector("header");
+  if (!header) return;
+
+  const currentScroll =
+    window.pageYOffset || document.documentElement.scrollTop;
+
+  // Ajouter la classe 'scrolled' quand on scroll un peu
+  if (currentScroll > 50) {
+    header.classList.add("scrolled");
+  } else {
+    header.classList.remove("scrolled");
+  }
+
+  // Éviter les petits mouvements involontaires
+  if (Math.abs(currentScroll - lastScrollTop) < scrollThreshold) {
+    return;
+  }
+
+  // Scroll vers le bas - cacher la navbar
+  if (currentScroll > lastScrollTop && currentScroll > 100) {
+    header.classList.add("navbar-hidden");
+  }
+  // Scroll vers le haut - montrer la navbar
+  else if (currentScroll < lastScrollTop) {
+    header.classList.remove("navbar-hidden");
+  }
+
+  lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
+}
+
+// Debounce pour optimiser les performances
+window.addEventListener("scroll", () => {
+  window.clearTimeout(isScrolling);
+  isScrolling = setTimeout(() => {
+    handleNavbarScroll();
+  }, 10);
+});
+
+// Appel initial
+handleNavbarScroll();

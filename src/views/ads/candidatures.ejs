@@ -2,6 +2,10 @@
 <link rel="stylesheet" href="/style/navbar.css" />
 <link rel="stylesheet" href="/style/kanban.css" />
 
+<script id="applications-data" type="application/json">
+  <%- JSON.stringify(applications) %>
+</script>
+
 <main class="kanban-container">
   <header class="kanban-header">
     <div>
@@ -64,34 +68,42 @@
 
 <script type="module" src="/js/navbar.js"></script>
 <script>
+  // Charger les données depuis le script JSON
   const applications = JSON.parse(
     document.getElementById("applications-data").textContent
   );
+
   function renderCard(app) {
-    const appliedDate = new Date(app.applied_at).toLocaleDateString("fr-FR");
+    const dateField = app.applied_at || app.application_date;
+    const appliedDate = dateField
+      ? new Date(dateField).toLocaleDateString("fr-FR")
+      : "Date inconnue";
+
     return `
-      <div class="kanban-card" data-id="${app.application_id}" draggable="true">
-        <div class="card-header">
-          <h4>${app.first_name || ""} ${app.last_name || ""}</h4>
-          <span class="card-date">${appliedDate}</span>
-        </div>
-        <p class="card-email">📧 ${app.email || "Non renseigné"}</p>
-        <p class="card-phone">📱 ${app.phone || "Non renseigné"}</p>
-        ${
-          app.cv_path
-            ? `<a href="${app.cv_path}" target="_blank" class="btn-cv">📄 Voir le CV</a>`
-            : ""
-        }
-        ${
-          app.cover_letter
-            ? `<p class="card-message">${app.cover_letter.substring(
-                0,
-                100
-              )}...</p>`
-            : ""
-        }
+    <div class="kanban-card" data-id="${app.application_id}" draggable="true">
+      <div class="card-header">
+        <h4>${app.first_name || ""} ${app.last_name || ""}</h4>
+        <span class="card-date">${appliedDate}</span>
       </div>
-    `;
+      <p class="card-email">📧 ${app.email || "Non renseigné"}</p>
+      <p class="card-phone">📱 ${app.phone || "Non renseigné"}</p>
+      ${
+        app.cv_path
+          ? `<a href="https://docs.google.com/viewer?url=${encodeURIComponent(
+              app.cv_path
+            )}" target="_blank" rel="noopener noreferrer" class="btn-cv">📄 Voir le CV</a>`
+          : ""
+      }
+      ${
+        app.cover_letter
+          ? `<p class="card-message">${app.cover_letter.substring(
+              0,
+              100
+            )}...</p>`
+          : ""
+      }
+    </div>
+  `;
   }
 
   function renderBoard() {
@@ -102,8 +114,10 @@
       const container = document.getElementById(`column-${status}`);
       const count = document.getElementById(`count-${status}`);
 
-      container.innerHTML = filtered.map(renderCard).join("");
-      count.textContent = filtered.length;
+      if (container && count) {
+        container.innerHTML = filtered.map(renderCard).join("");
+        count.textContent = filtered.length;
+      }
     });
 
     attachDragEvents();
@@ -147,7 +161,7 @@
         const newStatus = column.parentElement.dataset.status;
 
         // Mise à jour en base de données
-        const res = await fetch(`/api/applications/${appId}`, {
+        const res = await fetch(`/api/ads/applications/${appId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           credentials: "include",

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/style/main.css">
+  <link rel="stylesheet" href="/style/ads-list.css">
+</head>
+<body>
+  <div id="navbar"></div>
+  <script src="/js/navbar.js"></script>
+
+  <main class="container">
+    <h1><%= title %></h1>
+    
+    <% if (offres.length === 0) { %>
+      <p class="error">Aucune offre disponible pour le moment.</p>
+    <% } else { %>
+      <div class="jobs-grid" id="jobs-list">
+        <% offres.forEach(function(offre) { %>
+          <div class="job-card-wrapper" data-id="<%= offre.ad_id %>">
+            <div class="job-card-inner">
+              
+              <!-- RECTO -->
+              <article class="job-card job-card-front">
+                <h3><%= offre.job_title %></h3>
+                <p class="company-name"><%= offre.company_name || 'Entreprise non spécifiée' %></p>
+                <p class="muted">
+                  <%= offre.location || 'Localisation non spécifiée' %>
+                  <% if (offre.contract_type) { %>
+                    — <span class="contract-type"><%= offre.contract_type %></span>
+                  <% } %>
+                </p>
+                <% if (offre.salary_min || offre.salary_max) { %>
+                  <p class="salary">
+                    <% if (offre.salary_min && offre.salary_max) { %>
+                      <%= offre.salary_min %> € – <%= offre.salary_max %> €
+                    <% } else if (offre.salary_min) { %>
+                      À partir de <%= offre.salary_min %> €
+                    <% } else { %>
+                      Jusqu'à <%= offre.salary_max %> €
+                    <% } %>
+                  </p>
+                <% } else { %>
+                  <p class="salary">Salaire non communiqué</p>
+                <% } %>
+                
+                <!-- BOUTON INITIAL : UNIQUEMENT "En savoir plus" -->
+                <div class="job-card-actions">
+                  <button class="btn btn-details js-more" data-id="<%= offre.ad_id %>">En savoir plus</button>
+                </div>
+              </article>
+
+              <!-- VERSO (formulaire candidature) -->
+              <div class="job-card job-card-back">
+                <h3>Candidature rapide</h3>
+                <form class="quick-apply-form" data-job-id="<%= offre.ad_id %>">
+                  <div class="form-group">
+                    <label for="name-<%= offre.ad_id %>">Nom complet *</label>
+                    <input type="text" id="name-<%= offre.ad_id %>" name="name" required placeholder="Jean Dupont">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="email-<%= offre.ad_id %>">Email *</label>
+                    <input type="email" id="email-<%= offre.ad_id %>" name="email" required placeholder="jean.dupont@email.com">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="phone-<%= offre.ad_id %>">Téléphone *</label>
+                    <input type="tel" id="phone-<%= offre.ad_id %>" name="phone" required placeholder="06 12 34 56 78">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="cv-<%= offre.ad_id %>">CV (PDF, max 5Mo) *</label>
+                    <input type="file" id="cv-<%= offre.ad_id %>" name="cv" accept=".pdf" required>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="message-<%= offre.ad_id %>">Message de motivation</label>
+                    <textarea id="message-<%= offre.ad_id %>" name="message" rows="3" placeholder="Parlez-nous de vous..."></textarea>
+                  </div>
+                  
+                  <div class="form-actions-flip">
+                    <button type="button" class="btn btn-secondary btn-back-flip">← Retour</button>
+                    <button type="submit" class="btn btn-submit">Envoyer</button>
+                  </div>
+                </form>
+              </div>
+              
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </main>
+
+  <script src="/js/ads-list.js"></script>
+</body>
+</html>

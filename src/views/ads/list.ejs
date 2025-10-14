@@ -17,6 +17,9 @@
        ============================== -->
   <section class="search-section">
     <form class="searchbar" action="/ads" method="get">
+      <% if (companyFilter) { %>
+        <input type="hidden" name="company_id" value="<%= companyFilter.company_id %>" />
+      <% } %>
       <input
         type="text"
         name="keywords"
@@ -67,6 +70,17 @@
 
 <main class="container ads-page">
   <h1><%= title %></h1>
+  <% if (companyFilter) { %>
+    <div class="ads-filter-banner">
+      <div>
+        <p>Vous consultez les offres publiées par <strong><%= companyFilter.company_name %></strong>.</p>
+        <% if (companyFilter.industry) { %>
+          <p class="muted">Secteur : <%= companyFilter.industry %></p>
+        <% } %>
+      </div>
+      <a class="btn btn-secondary" href="/ads">Réinitialiser</a>
+    </div>
+  <% } %>
     
     <% if (offres.length === 0) { %>
       <p class="error">Aucune offre disponible pour le moment.</p>
@@ -112,7 +126,7 @@
                 <form class="quick-apply-form" data-job-id="<%= offre.ad_id %>">
                   <div class="form-group">
                     <label for="name-<%= offre.ad_id %>">Nom complet *</label>
-                    <input type="text" id="name-<%= offre.ad_id %>" name="name" required placeholder="Jean Dupont">
+                    <input type="text" id="name-<%= offre.ad_id %>" name="full_name" required placeholder="Jean Dupont">
                   </div>
                   
                   <div class="form-group">

@@ -10,19 +10,45 @@ const r = Router();
  */
 r.get("/", async (req, res) => {
   try {
+    const companyIdParam = req.query.company_id;
+    const companyId = companyIdParam ? Number.parseInt(companyIdParam, 10) : null;
+    const filters = [`a.status = 'active'`];
+    const params = [];
+
+    if (Number.isInteger(companyId) && companyId > 0) {
+      filters.push("a.company_id = ?");
+      params.push(companyId);
+    }
+
+    const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
+
     const [advertisements] = await pool.query(`
       SELECT 
         a.*,
         c.company_name
       FROM advertisements a
       LEFT JOIN companies c ON a.company_id = c.company_id
-      WHERE a.status = 'active'
+      ${whereClause}
       ORDER BY a.created_at DESC
-    `);
+    `, params);
+
+    let companyInfo = null;
+    if (Number.isInteger(companyId) && companyId > 0) {
+      const [[companyRow]] = await pool.query(
+        `SELECT company_id, company_name, industry FROM companies WHERE company_id = ? LIMIT 1`,
+        [companyId]
+      );
+      if (companyRow) {
+        companyInfo = companyRow;
+      }
+    }
 
     return res.render("ads/list", {
-      title: "Toutes les offres",
+      title: companyInfo
+        ? `Offres chez ${companyInfo.company_name}`
+        : "Toutes les offres",
       offres: advertisements,
+      companyFilter: companyInfo,
     });
   } catch (e) {
     console.error(e);

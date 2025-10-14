@@ -26,6 +26,7 @@ import apiAdsRoutes from "./routes/api.ads.js"; // API /api/ads
 import apiAuthRoutes from "./routes/api.auth.js"; // API /api/auth
 import profileRoutes from "./routes/profile.js"; // SSR /profile
 import apiAccountRoutes from "./routes/api.account.js"; // API /api/account
+import apiAdminRoutes from "./routes/api.admin.js"; // API /api/admin
 
 console.log("[BOOT]", {
   file: import.meta.url,
@@ -111,6 +112,7 @@ app.use("/ads", adsRoutes);
 // ---- Routes API
 app.use("/api/auth", apiAuthRoutes);
 app.use("/api/ads", apiAdsRoutes);
+app.use("/api/admin", apiAdminRoutes);
 app.use("/profil", profileRoutes); // SSR
 app.use("/api/account", apiAccountRoutes);
 

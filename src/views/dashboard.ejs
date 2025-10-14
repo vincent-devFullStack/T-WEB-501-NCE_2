@@ -1,137 +1,100 @@
 <link rel="stylesheet" href="/style/dashboard.css" />
 
-<main class="dashboard-container">
-  <h1>Dashboard Administrateur</h1>
-  <p>Vue d'ensemble de la plateforme</p>
-
-  <div class="kpi-grid">
-    <!-- Carte Utilisateurs -->
-    <div class="users-card kpi-card-item" id="users-card">
-      <h2>👥 Utilisateurs inscrits</h2>
-      <div class="chart-with-legend">
-        <div class="donut-container">
-          <div class="donut" id="donut-chart-users"></div>
-          <div class="donut-center">
-            <p class="total" id="total-users">0</p>
-            <p class="label">inscrits</p>
-          </div>
-        </div>
-        <div class="legend">
-          <div class="legend-item">
-            <div class="legend-color candidats"></div>
-            <span class="legend-text"
-              >Candidats:
-              <span class="legend-value" id="candidats-count">0</span></span
-            >
-          </div>
-          <div class="legend-item">
-            <div class="legend-color recruteurs"></div>
-            <span class="legend-text"
-              >Recruteurs:
-              <span class="legend-value" id="recruteurs-count">0</span></span
-            >
-          </div>
-        </div>
-      </div>
+<div class="dashboard-admin">
+  <header class="dashboard-header">
+    <div>
+      <h1>Console d'administration</h1>
+      <p>Gérez l'ensemble des tables et appliquez les opérations CRUD en toute simplicité.</p>
     </div>
+  </header>
 
-    <!-- Carte Annonces -->
-    <div class="ads-card kpi-card-item" id="ads-card">
-      <h2>💼 Annonces publiées</h2>
-      <div class="chart-with-legend">
-        <div class="donut-container">
-          <div class="donut" id="donut-chart-ads"></div>
-          <div class="donut-center">
-            <p class="total" id="total-ads">0</p>
-            <p class="label">annonces</p>
-          </div>
+  <div class="dashboard-content">
+    <nav class="dashboard-tabs" role="tablist">
+      <% adminTables.forEach((table, index) => { %>
+        <button
+          type="button"
+          class="dashboard-tab <%= index === 0 ? 'is-active' : '' %>"
+          data-table="<%= table.table %>"
+          role="tab"
+          aria-selected="<%= index === 0 ? 'true' : 'false' %>"
+        >
+          <span class="dashboard-tab__label"><%= table.label %></span>
+          <span class="dashboard-tab__hint"><%= table.description %></span>
+        </button>
+      <% }) %>
+    </nav>
+
+    <section class="dashboard-panel" aria-live="polite">
+      <header class="dashboard-panel__header">
+        <div>
+          <h2 id="admin-table-title">Chargement…</h2>
+          <p class="muted" id="admin-table-description"></p>
         </div>
-        <div class="legend">
-          <div class="legend-item">
-            <div class="legend-color cdi"></div>
-            <span class="legend-text"
-              >CDI: <span class="legend-value" id="cdi-count">0</span></span
-            >
-          </div>
-          <div class="legend-item">
-            <div class="legend-color stage"></div>
-            <span class="legend-text"
-              >Stage: <span class="legend-value" id="stage-count">0</span></span
-            >
-          </div>
-          <div class="legend-item">
-            <div class="legend-color alternance"></div>
-            <span class="legend-text"
-              >Alternance:
-              <span class="legend-value" id="alternance-count">0</span></span
-            >
-          </div>
+        <div class="dashboard-panel__actions">
+          <label class="dashboard-search">
+            <span class="sr-only">Rechercher</span>
+            <input type="search" id="admin-table-search" placeholder="Rechercher…" />
+          </label>
+          <button type="button" class="btn" id="admin-create-btn">Nouvel enregistrement</button>
+        </div>
+      </header>
+
+      <div class="dashboard-panel__table">
+        <div class="table-container">
+          <table class="data-table" id="admin-data-table">
+            <thead></thead>
+            <tbody>
+              <tr>
+                <td class="loading-cell">Chargement des données…</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Liste des utilisateurs -->
-  <div class="users-list-section" id="users-list-section" style="display: none">
-    <div class="section-header">
-      <h2>📋 Liste des utilisateurs</h2>
-    </div>
-    <div class="table-container">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Nom</th>
-            <th>Email</th>
-            <th>Rôle</th>
-            <th>Inscription</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="users-table-body">
-          <tr>
-            <td colspan="5" class="loading-cell">Chargement...</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Liste des annonces -->
-  <div class="ads-list-section" id="ads-list-section" style="display: none">
-    <div class="section-header">
-      <h2>📋 Liste des annonces</h2>
-    </div>
-    <div class="table-container">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Titre</th>
-            <th>Entreprise</th>
-            <th>Type de contrat</th>
-            <th>Statut</th>
-            <th>Date de création</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="ads-table-body">
-          <tr>
-            <td colspan="7" class="loading-cell">Chargement...</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</main>
-
-<div class="modal" id="ad-details-modal" style="display: none">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2 id="modal-title">Détails de l'annonce</h2>
-      <button class="btn-close-modal" id="close-modal">✕</button>
-    </div>
-    <div class="modal-body" id="modal-body"></div>
+      <footer class="dashboard-panel__footer">
+        <div class="pagination-info" id="admin-pagination-info"></div>
+        <div class="pagination-controls">
+          <button type="button" class="btn-secondary pagination-btn" id="admin-prev-page" disabled>
+            ← Précédent
+          </button>
+          <span id="admin-current-page" class="pagination-current">Page 1</span>
+          <button type="button" class="btn-secondary pagination-btn" id="admin-next-page" disabled>
+            Suivant →
+          </button>
+          <label class="pagination-size">
+            <span class="sr-only">Éléments par page</span>
+            <select id="admin-page-size">
+              <option value="10">10 / page</option>
+              <option value="25">25 / page</option>
+              <option value="50">50 / page</option>
+            </select>
+          </label>
+        </div>
+      </footer>
+    </section>
   </div>
 </div>
 
-<script type="module" src="/js/dashboard.js"></script>
+<div class="admin-modal" id="admin-modal" aria-hidden="true">
+  <div class="admin-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+    <header class="admin-modal__header">
+      <h2 id="admin-modal-title">Nouvel enregistrement</h2>
+      <button type="button" class="admin-modal__close" id="admin-modal-close" aria-label="Fermer">✕</button>
+    </header>
+    <form id="admin-form">
+      <div class="admin-form-body" id="admin-form-fields"></div>
+      <footer class="admin-form-footer">
+        <button type="button" class="btn-secondary" id="admin-form-cancel">Annuler</button>
+        <button type="submit" class="btn" id="admin-form-submit">Enregistrer</button>
+      </footer>
+    </form>
+  </div>
+</div>
+
+<div class="admin-toast-container" id="admin-toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+<script>
+  window.__ADMIN_TABLES__ = <%- JSON.stringify(adminTables) %>;
+</script>
+<script type="module" src="/js/admin-dashboard.js"></script>

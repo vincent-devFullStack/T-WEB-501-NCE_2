@@ -2,14 +2,14 @@
    NAVBAR AMÉLIORÉE
    ============================== */
 header {
-  background: var(--card);
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 100%);
+  box-shadow: 0 18px 35px rgba(15, 23, 42, 0.08);
   padding: 0;
   position: sticky;
   top: 0;
-  z-index: 1000;
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  z-index: 3000;
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   transform: translateY(0);
 }
@@ -20,7 +20,7 @@ header {
   justify-content: space-between;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 16px 32px;
+  padding: 18px 36px;
   gap: 24px;
 }
 
@@ -48,7 +48,7 @@ header {
 #navbar .nav-links {
   list-style: none;
   display: flex;
-  gap: 8px;
+  gap: 12px;
   padding: 0;
   margin: 0;
   align-items: center;
@@ -59,11 +59,13 @@ header {
   text-decoration: none;
   color: var(--ink);
   font-weight: 500;
-  padding: 10px 18px;
-  border-radius: 8px;
+  padding: 10px 20px;
+  border-radius: 999px;
   transition: all 0.2s ease;
   position: relative;
   font-size: 15px;
+  background: rgba(148, 163, 184, 0.12);
+  backdrop-filter: blur(12px);
 }
 #navbar .nav-links a::after {
   content: "";
@@ -71,15 +73,16 @@ header {
   bottom: 6px;
   left: 50%;
   transform: translateX(-50%) scaleX(0);
-  width: 60%;
-  height: 2px;
-  background: var(--brand);
+  width: 50%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--brand), transparent);
   transition: transform 0.2s ease;
   border-radius: 2px;
 }
 #navbar .nav-links a:hover {
   color: var(--brand);
-  background: color-mix(in srgb, var(--brand) 8%, transparent);
+  background: color-mix(in srgb, var(--brand) 20%, transparent);
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--brand) 15%, transparent);
 }
 #navbar .nav-links a:hover::after {
   transform: translateX(-50%) scaleX(1);
@@ -97,47 +100,47 @@ header {
   flex-shrink: 0;
 }
 #navbar .btn {
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-hover) 100%);
   color: #fff;
-  padding: 10px 20px;
-  border-radius: 10px;
+  padding: 10px 22px;
+  border-radius: 999px;
   text-decoration: none;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 15px;
-  font-weight: 500;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--brand) 25%, transparent);
+  font-weight: 600;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--brand) 28%, transparent);
 }
 #navbar .btn:hover {
-  background: var(--brand-hover);
+  background: linear-gradient(135deg, var(--brand-hover) 0%, var(--brand) 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--brand) 35%, transparent);
+  box-shadow: 0 18px 35px color-mix(in srgb, var(--brand) 35%, transparent);
 }
 #navbar .btn:active {
   transform: translateY(0);
 }
 #navbar .btn-secondary {
-  background: #f3f4f6;
-  color: var(--ink);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  background: #e2e8f0;
+  color: #0f172a;
+  box-shadow: none;
 }
 #navbar .btn-secondary:hover {
-  background: #e5e7eb;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  background: #cbd5e1;
+  box-shadow: none;
 }
 
 /* Dropdown (scopé au NAVBAR) — CLIC UNIQUEMENT */
 #navbar .dropdown {
   position: relative;
-  z-index: 1000;
+  z-index: 4000;
 }
 #navbar .dropbtn {
   background: transparent;
   color: var(--ink);
   padding: 10px 18px;
-  border-radius: 10px;
-  border: 2px solid color-mix(in srgb, var(--brand) 20%, transparent);
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
   cursor: pointer;
   font-weight: 500;
   transition: all 0.2s ease;
@@ -152,9 +155,10 @@ header {
   transition: transform 0.2s ease;
   pointer-events: none;
 }
-#navbar .dropbtn:hover {
-  background: color-mix(in srgb, var(--brand) 8%, transparent);
-  border-color: var(--brand);
+#navbar .dropbtn:hover,
+#navbar .dropdown.open .dropbtn {
+  background: rgba(148, 163, 184, 0.16);
+  border-color: color-mix(in srgb, var(--brand) 45%, transparent);
   color: var(--brand);
 }
 #navbar .dropdown.open .dropbtn::after {
@@ -166,14 +170,15 @@ header {
   display: none !important;
   position: absolute;
   right: 0;
-  background: var(--card);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-  border-radius: 12px;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 252, 0.85) 100%);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+  border-radius: 16px;
   margin-top: 12px;
-  min-width: 220px;
+  min-width: 240px;
   z-index: 1000;
   overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  backdrop-filter: blur(18px);
 }
 #navbar .dropdown.open .dropdown-content {
   display: block !important;
@@ -209,18 +214,41 @@ header {
 }
 #navbar .dropdown-content a:hover,
 #navbar .dropdown-content button:hover {
-  background: color-mix(in srgb, var(--brand) 10%, transparent);
+  background: color-mix(in srgb, var(--brand) 16%, transparent);
+  color: var(--brand);
+  padding-left: 20px;
+}
+
+.dropdown-mobile-nav {
+  display: none;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.dropdown-mobile-nav .dropdown-nav-link {
+  display: block;
+  padding: 10px 16px;
+  border-radius: 10px;
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.dropdown-mobile-nav .dropdown-nav-link:hover {
+  background: color-mix(in srgb, var(--brand) 16%, transparent);
   color: var(--brand);
   padding-left: 20px;
 }
 #navbar .dropdown-content button.linklike {
   color: #dc2626;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
   margin-top: 4px;
   text-decoration: none;
 }
 #navbar .dropdown-content button.linklike:hover {
-  background: #fef2f2;
+  background: rgba(239, 68, 68, 0.08);
   color: #b91c1c;
 }
 
@@ -280,13 +308,13 @@ header.scrolled {
 }
 
 #navbar .dropdown-content .dropdown-link-with-badge {
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: flex-start;
+  gap: 8px;
 }
 
 #navbar .dropdown-content .dropdown-link-with-badge .notification-badge {
   position: static;
-  margin-left: auto;
+  margin-left: 8px;
   top: auto;
   right: auto;
 }
@@ -296,8 +324,21 @@ header.scrolled {
   .header-container {
     padding: 12px 16px;
   }
-  #navbar .nav-links {
+  body.has-auth-dropdown #navbar .nav-links {
     display: none;
+  }
+  body:not(.has-auth-dropdown) #navbar .nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+  body:not(.has-auth-dropdown) #navbar .nav-links li {
+    width: 100%;
+  }
+  body:not(.has-auth-dropdown) #navbar .nav-links a {
+    display: block;
+    text-align: center;
   }
   #navbar .nav-actions {
     gap: 8px;
@@ -305,5 +346,10 @@ header.scrolled {
   #navbar .btn {
     padding: 8px 16px;
     font-size: 14px;
+  }
+  .dropdown-mobile-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 }

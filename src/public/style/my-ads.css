@@ -106,17 +106,29 @@ header {
    ======================================== */
 
 .ad-card {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: all 0.2s ease;
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 252, 0.75) 100%);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 20px;
+  padding: 1.75rem;
+  box-shadow: 0 22px 40px rgba(15, 23, 42, 0.12);
+  transition: all 0.25s ease;
+  backdrop-filter: blur(14px);
 }
 
 .ad-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-  border-color: #d0d0d0;
+  box-shadow: 0 28px 48px rgba(15, 23, 42, 0.18);
+  border-color: color-mix(in srgb, var(--brand) 24%, transparent);
+  transform: translateY(-4px);
+}
+
+@media (max-width: 768px) {
+  .ads-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ad-card {
+    padding: 1.25rem;
+  }
 }
 
 /* ========================================

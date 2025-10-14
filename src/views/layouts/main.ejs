@@ -11,7 +11,9 @@
 
     <!-- (Optionnel) si tu veux minimiser le FOUC thème, on fera un mini inline plus tard -->
   </head>
-  <body>
+  <% const role = (user && user.role) || ""; %>
+  <% const bodyClass = role ? `mode-${role}` : "mode-public"; %>
+  <body data-role="<%= role %>" class="<%= bodyClass %>">
     <header>
       <div id="navbar" class="header-container">
         <!-- rempli par navbar.js -->
@@ -22,5 +24,6 @@
 
     <!-- JS global -->
     <script type="module" src="/js/navbar.js"></script>
+    <script src="/js/notifications.js" defer></script>
   </body>
 </html>

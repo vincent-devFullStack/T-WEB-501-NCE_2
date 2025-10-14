@@ -43,8 +43,8 @@ async function buildNavbar() {
   const el = document.getElementById("navbar");
   if (!el) return;
 
-  // éviter flash de thème
-  applyRoleTheme(null);
+  // appliquer le thème initial communiqué par le serveur (évite le flash)
+  applyRoleTheme(document.body.dataset.role || null);
 
   let user = null;
   try {
@@ -54,6 +54,7 @@ async function buildNavbar() {
     // non connecté
   }
   applyRoleTheme(user?.role);
+  document.body.classList.toggle("has-auth-dropdown", Boolean(user));
 
   if (!user) {
     el.innerHTML = `
@@ -62,6 +63,7 @@ async function buildNavbar() {
       </a>
       <ul class="nav-links">
         <li><a href="/">Accueil</a></li>
+        <li><a href="/ads?">Toutes les offres</a></li>
       </ul>
       <div class="nav-actions">
         <a class="btn" href="/auth/login">Se connecter</a>
@@ -76,21 +78,46 @@ async function buildNavbar() {
     [user.first_name, user.last_name].filter(Boolean).join(" ") ||
     "Mon compte";
 
-  let roleLinks = `<li><a href="/">Accueil</a></li>`;
+  const navItems = [
+    { href: "/", label: "Accueil", badge: false },
+  ];
+
   if (user.role === "candidat") {
-    roleLinks += `
-      <li><a href="/profil">Toutes les offres</a></li>
-      <li><a href="/entreprise">Trouver une entreprise</a></li>`;
+    navItems.push(
+      { href: "/ads?", label: "Toutes les offres", badge: false },
+      { href: "/entreprise", label: "Trouver une entreprise", badge: false }
+    );
   } else if (user.role === "recruteur") {
-    roleLinks += `
-      <li class="nav-link-with-badge">
-        <a href="/ads/my-ads">Mes offres</a>
-        <span class="notification-badge global-notification-badge"></span>
-      </li>
-      <li><a href="/profil">Toutes les offres</a></li>`;
+    navItems.push(
+      { href: "/ads/my-ads", label: "Mes offres", badge: true },
+      { href: "/ads?", label: "Toutes les offres", badge: false }
+    );
   } else if (user.role === "admin") {
-    roleLinks += `<li><a href="/dashboard">Dashboard Admin</a></li>`;
+    navItems.push({ href: "/dashboard", label: "Dashboard Admin", badge: false });
   }
+
+  const roleLinks = navItems
+    .map((item) => {
+      if (item.badge) {
+        return `<li class="nav-link-with-badge">
+          <a href="${item.href}">${item.label}</a>
+          <span class="notification-badge global-notification-badge"></span>
+        </li>`;
+      }
+      return `<li><a href="${item.href}">${item.label}</a></li>`;
+    })
+    .join("");
+
+  const mobileDropdownLinks = navItems
+    .filter((item) => item.href !== "/ads/my-ads")
+    .map((item) => {
+      const badgeSpan = item.badge
+        ? '<span class="notification-badge global-notification-badge"></span>'
+        : "";
+      const extraClass = item.badge ? "dropdown-link-with-badge" : "";
+      return `<a href="${item.href}" role="menuitem" class="dropdown-nav-link ${extraClass}">${item.label}${badgeSpan}</a>`;
+    })
+    .join("");
 
   el.innerHTML = `
     <a href="/" class="logo"><img src="/images/logo.png" alt="Logo"></a>
@@ -111,6 +138,13 @@ async function buildNavbar() {
                   <span>Mes offres</span>
                   <span class="notification-badge global-notification-badge"></span>
                 </a>`
+              : ""
+          }
+          ${
+            mobileDropdownLinks
+              ? `<div class="dropdown-mobile-nav" role="group" aria-label="Navigation mobile">
+                  ${mobileDropdownLinks}
+                </div>`
               : ""
           }
           <button id="logoutBtn" class="linklike" role="menuitem">Déconnexion</button>

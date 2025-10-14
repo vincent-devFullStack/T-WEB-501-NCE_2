@@ -1,0 +1,108 @@
+<link rel="stylesheet" href="/style/companies.css" />
+
+<section class="companies-hero">
+  <div class="container">
+    <h1>Trouver une entreprise</h1>
+    <p>
+      Découvrez les entreprises présentes sur la plateforme et identifiez
+      rapidement celles qui recrutent en ce moment.
+    </p>
+  </div>
+</section>
+
+<section class="companies-section">
+  <div class="container">
+    <% if (!companies || companies.length === 0) { %>
+      <div class="empty-state">
+        <p>Aucune entreprise n'est encore référencée pour le moment.</p>
+        <a class="btn" href="/ads">Consulter les offres disponibles</a>
+      </div>
+    <% } else { %>
+      <div class="companies-toolbar">
+        <form class="companies-filter" method="get">
+          <label for="companies-sector">Secteur d'activité</label>
+          <div class="filter-select">
+            <select
+              id="companies-sector"
+              name="secteur"
+              aria-label="Filtrer par secteur d'activité"
+            >
+              <option value="">Tous les secteurs</option>
+              <% industries.forEach((industry) => { %>
+                <option
+                  value="<%= industry %>"
+                  <%= selectedIndustry === industry ? "selected" : "" %>
+                >
+                  <%= industry %>
+                </option>
+              <% }); %>
+            </select>
+            <button
+              type="submit"
+              class="btn btn-secondary filter-submit"
+              aria-label="Appliquer le filtre secteur"
+            >
+              Filtrer
+            </button>
+          </div>
+        </form>
+        <div class="companies-toolbar__meta">
+          <p>
+            <strong><%= companies.length %></strong> entreprise<%= companies.length > 1 ? 's' : '' %> référencée<%= companies.length > 1 ? 's' : '' %>.
+          </p>
+          <a class="btn btn-secondary" href="/ads">Voir toutes les offres</a>
+        </div>
+      </div>
+      <div class="companies-grid">
+        <% companies.forEach((company) => { %>
+          <article class="company-card">
+            <header class="company-card__header">
+              <h2><%= company.company_name %></h2>
+              <span
+                class="company-card__badge <%= company.active_ads_count ? '' : 'is-empty' %>"
+              >
+                <% if (company.active_ads_count) { %>
+                  <%= company.active_ads_count %> offre<%= company.active_ads_count > 1 ? 's' : '' %> active<%= company.active_ads_count > 1 ? 's' : '' %>
+                <% } else { %>
+                  Aucune offre active
+                <% } %>
+              </span>
+            </header>
+            <% if (company.industry) { %>
+              <p class="company-card__industry"><%= company.industry %></p>
+            <% } %>
+            <% if (company.created_at_label) { %>
+              <p class="company-card__meta">
+                Présente depuis <%= company.created_at_label %>
+              </p>
+            <% } %>
+            <div class="company-card__actions">
+              <a
+                class="btn btn-outline"
+                href="/ads?company_id=<%= company.company_id %>"
+                aria-label="Voir les offres publiées par <%= company.company_name %>"
+              >
+                Voir les offres
+              </a>
+            </div>
+          </article>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<script>
+  (function () {
+    const select = document.getElementById("companies-sector");
+    const button = document.querySelector(".filter-submit");
+    if (select && button) {
+      if (window.matchMedia("(hover: hover)").matches) {
+        button.style.display = "none";
+        select.addEventListener("change", (event) => {
+          event.currentTarget.form.submit();
+        });
+      }
+    }
+  })();
+</script>

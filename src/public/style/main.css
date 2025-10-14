@@ -2,43 +2,50 @@
    VARIABLES GLOBALES
    ============================== */
 :root {
-  --bg: #f6f7f9;
-  --card: #ffffff;
-  --ink: #16181d;
-  --muted: #6b7280;
+  --bg: #e9efff;
+  --bg-gradient: linear-gradient(135deg, #e9efff 0%, #f5f7ff 55%, #ffffff 100%);
+  --card: rgba(255, 255, 255, 0.92);
+  --card-backdrop: blur(18px);
+  --ink: #0f172a;
+  --muted: #4b5563;
 
-  --brand: #2563eb;
-  --brand-hover: #1e51c8;
+  --brand: #1d4ed8;
+  --brand-hover: #153eaa;
+  --brand-contrast: #f8fafc;
 
-  --radius: 12px;
-  --shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  --radius: 16px;
+  --shadow: 0 25px 45px rgba(15, 23, 42, 0.12);
 }
 
 /* ==============================
    THEMES PAR ROLE
    ============================== */
 body.mode-public {
-  --brand: #2563eb;
-  --brand-hover: #1e51c8;
-  background: var(--bg);
+  --brand: #1d4ed8;
+  --brand-hover: #153eaa;
+  --brand-contrast: #f8fafc;
+  --bg-gradient: linear-gradient(135deg, #e4ecff 0%, #f1f5ff 50%, #ffffff 100%);
 }
 
 body.mode-candidat {
-  --brand: #2487eb; /* bleu */
-  --brand-hover: #1d6ab7;
-  background: #ddf5ff;
+  --brand: #0f766e; /* teal profond */
+  --brand-hover: #0a4f4a;
+  --brand-contrast: #f4fdfc;
+  --bg-gradient: linear-gradient(135deg, #d7f5f2 0%, #e9fbf8 55%, #ffffff 100%);
 }
 
 body.mode-recruteur {
-  --brand: #eab308; /* jaune */
-  --brand-hover: #ca8a04;
-  background: #fefce8;
+  --brand: #b45309; /* ambre foncé */
+  --brand-hover: #8a3f07;
+  --brand-contrast: #fffbeb;
+  --bg-gradient: linear-gradient(135deg, #fdf2e3 0%, #fff5e8 55%, #ffffff 100%);
 }
 
 body.mode-admin {
-  --brand: #dc2626; /* rouge */
-  --brand-hover: #b91c1c;
-  background: #fef2f2;
+  --brand: #b91c1c; /* rouge profond */
+  --brand-hover: #8f1515;
+  --brand-contrast: #fef2f2;
+  --bg-gradient: linear-gradient(135deg, #fde4e4 0%, #ffe9ea 55%, #ffffff 100%);
 }
 
 /* ==============================
@@ -46,8 +53,11 @@ body.mode-admin {
    ============================== */
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
   color: var(--ink);
+  background: var(--bg-gradient);
+  min-height: 100vh;
+  transition: background 0.4s ease;
 }
 
 h1,
@@ -73,12 +83,15 @@ p {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 20px;
+  position: relative;
+  z-index: 1;
 }
 
 .container h2 {
   font-size: 24px;
   margin-bottom: 24px;
   color: var(--ink);
+  letter-spacing: -0.02em;
 }
 
 /* ==============================
@@ -92,16 +105,19 @@ form {
 input,
 select {
   padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: var(--radius);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 12px;
   font-size: 15px;
+  background: rgba(255, 255, 255, 0.85);
+  transition: all 0.2s ease;
 }
 
 input:focus,
 select:focus {
   outline: none;
-  border-color: color-mix(in srgb, var(--brand) 65%, #cfd6e4);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 18%, transparent);
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 24%, transparent);
+  background: white;
 }
 
 /* ==============================
@@ -116,15 +132,17 @@ select:focus {
 
 .job-card {
   background: var(--card);
-  border-radius: var(--radius);
+  border-radius: 20px;
   box-shadow: var(--shadow);
   padding: 20px;
   transition: all 0.2s ease;
+  backdrop-filter: var(--card-backdrop);
+  border: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .job-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 25px 45px rgba(15, 23, 42, 0.18);
 }
 
 .job-card h3 {
@@ -144,6 +162,8 @@ select:focus {
   border-top: 1px solid #e5e7eb;
   font-size: 14px;
   color: var(--muted);
+  background: rgba(248, 250, 252, 0.65);
+  border-radius: 12px;
 }
 
 /* ==============================
@@ -169,27 +189,37 @@ select:focus {
 
 /* Boutons génériques */
 .btn {
-  background: var(--brand);
-  color: #fff;
-  padding: 8px 14px;
-  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 80%, white) 100%);
+  color: var(--brand-contrast);
+  padding: 10px 18px;
+  border-radius: 999px;
   text-decoration: none;
   border: none;
   cursor: pointer;
-  transition: background 0.2s ease;
-  font-size: 14px;
-  font-weight: 500;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.16);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .btn:hover {
-  background: var(--brand-hover);
+  background: linear-gradient(135deg, var(--brand-hover) 0%, color-mix(in srgb, var(--brand-hover) 80%, white) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.2);
 }
 
 .btn-secondary {
-  background: #f3f4f6;
-  color: var(--ink);
+  background: #e2e8f0;
+  color: #0f172a;
+  box-shadow: none;
 }
 
 .btn-secondary:hover {
-  background: #e5e7eb;
+  background: #cbd5e1;
+  color: #0f172a;
+  box-shadow: none;
 }

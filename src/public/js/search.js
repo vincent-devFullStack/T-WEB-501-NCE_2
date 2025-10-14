@@ -7,6 +7,46 @@
 
   const dropdown = form.querySelector(".dropdown-check");
   const btn = form.querySelector(".dropbtn");
+  const keywordInput = form.querySelector('input[name="keywords"]');
+
+  if (keywordInput) {
+    const datalistId = "search-suggestions";
+    let datalist = document.getElementById(datalistId);
+    if (!datalist) {
+      datalist = document.createElement("datalist");
+      datalist.id = datalistId;
+      document.body.appendChild(datalist);
+    }
+    keywordInput.setAttribute("list", datalistId);
+
+    let suggestionsLoaded = false;
+    const loadSuggestions = async () => {
+      if (suggestionsLoaded) return;
+      suggestionsLoaded = true;
+      try {
+        const res = await fetch("/api/ads", { credentials: "include" });
+        if (!res.ok) return;
+        const data = await res.json();
+        const ads = Array.isArray(data) ? data : data.ads || [];
+        const suggestions = new Set();
+        ads.forEach((ad) => {
+          if (ad?.job_title) suggestions.add(ad.job_title.trim());
+          if (ad?.company_name) suggestions.add(ad.company_name.trim());
+          if (ad?.location) suggestions.add(ad.location.trim());
+        });
+        datalist.innerHTML = Array.from(suggestions)
+          .filter(Boolean)
+          .slice(0, 20)
+          .map((value) => `<option value="${value}"></option>`)
+          .join("");
+      } catch (error) {
+        console.error("Auto-suggest error:", error);
+      }
+    };
+
+    keywordInput.addEventListener("focus", loadSuggestions, { once: true });
+    keywordInput.addEventListener("input", loadSuggestions, { once: true });
+  }
 
   // Toggle dropdown au clic
   btn.addEventListener("click", (e) => {

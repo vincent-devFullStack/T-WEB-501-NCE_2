@@ -9,16 +9,16 @@
 .container-wrapper {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 20px 60px;
+  padding: 0 24px 72px;
 }
 
 .container-wrapper h2 {
-  font-size: 32px;
+  font-size: 34px;
   font-weight: 700;
   margin-bottom: 32px;
   color: var(--ink);
   position: relative;
-  padding-bottom: 12px;
+  padding-bottom: 16px;
 }
 
 .container-wrapper h2::after {
@@ -26,9 +26,9 @@
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 60px;
+  width: 72px;
   height: 4px;
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-hover) 100%);
   border-radius: 2px;
 }
 
@@ -63,18 +63,19 @@
 }
 
 .job-card {
-  background: var(--card);
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  padding: 24px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.72) 100%);
+  border-radius: 22px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+  padding: 26px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid #f3f4f6;
+  border: 1px solid rgba(148, 163, 184, 0.18);
   position: relative;
   overflow: hidden;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   margin: 0;
+  backdrop-filter: blur(16px);
 }
 
 .job-card::before {
@@ -96,8 +97,8 @@
 
 /* Appliquer le hover uniquement sur le front (recto) */
 .job-card-front:hover {
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
-  border-color: color-mix(in srgb, var(--brand) 30%, transparent);
+  box-shadow: 0 26px 48px rgba(15, 23, 42, 0.2);
+  border-color: color-mix(in srgb, var(--brand) 35%, transparent);
 }
 
 .job-card-front:hover::before {
@@ -131,10 +132,10 @@
 
 .job-card .contract-type {
   display: inline-block;
-  padding: 4px 12px;
-  background: color-mix(in srgb, var(--brand) 10%, transparent);
+  padding: 6px 14px;
+  background: color-mix(in srgb, var(--brand) 16%, transparent);
   color: var(--brand);
-  border-radius: 20px;
+  border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
   margin-top: 8px;
@@ -149,20 +150,20 @@
 }
 
 .job-card .btn {
-  margin-top: 16px;
+  margin-top: 18px;
   width: 100%;
   padding: 12px;
-  border-radius: 10px;
+  border-radius: 999px;
   font-weight: 600;
-  background: var(--brand);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-hover) 100%);
   color: white;
   transition: all 0.2s ease;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.18);
 }
 
 .job-card .btn:hover {
-  background: var(--brand-hover);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--brand) 35%, transparent);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.22);
 }
 
 /* ==============================
@@ -178,10 +179,10 @@
 .btn-details {
   flex: 1;
   padding: 12px;
-  background: #f3f4f6;
+  background: rgba(148, 163, 184, 0.16);
   color: var(--ink);
   border: none;
-  border-radius: 10px;
+  border-radius: 999px;
   font-size: 14px;
   font-weight: 600;
   text-align: center;
@@ -190,8 +191,31 @@
 }
 
 .btn-details:hover {
-  background: #e5e7eb;
+  background: rgba(148, 163, 184, 0.24);
   transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .container-wrapper {
+    padding: 0 16px 48px;
+  }
+
+  .container-wrapper h2 {
+    font-size: 28px;
+  }
+
+  .job-card {
+    padding: 20px;
+    border-radius: 18px;
+  }
+
+  .job-card-actions {
+    flex-direction: column;
+  }
+
+  .btn-details {
+    width: 100%;
+  }
 }
 
 /* ==============================

@@ -6,13 +6,54 @@
   <title><%= title %></title>
   <link rel="stylesheet" href="/style/main.css">
   <link rel="stylesheet" href="/style/ads-list.css">
+  <link rel="stylesheet" href="/style/search.css">
 </head>
 <body>
   <div id="navbar"></div>
   <script src="/js/navbar.js"></script>
 
-  <main class="container">
-    <h1><%= title %></h1>
+  <!-- ==============================
+       SECTION DE RECHERCHE
+       ============================== -->
+  <section class="search-section">
+    <form class="searchbar" action="/ads" method="get">
+      <input
+        type="text"
+        name="keywords"
+        placeholder="Mots-clés (ex. développeur, UX)…"
+        aria-label="Recherche par mots-clés"
+      />
+      <input
+        type="text"
+        name="location"
+        placeholder="Localisation (ville, code postal)…"
+        aria-label="Recherche par localisation"
+      />
+
+      <!-- Dropdown Type de contrat -->
+      <div class="dropdown-check">
+        <button
+          class="dropbtn"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
+          Type de contrat
+          <svg width="12" height="8" viewBox="0 0 12 8"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="2" fill="none" fill-rule="evenodd"/></svg>
+        </button>
+        <div class="dropdown-content">
+          <label><input type="checkbox" name="type[]" value="CDI"> CDI</label>
+          <label><input type="checkbox" name="type[]" value="CDD"> CDD</label>
+          <label><input type="checkbox" name="type[]" value="Freelance"> Freelance</label>
+          <label><input type="checkbox" name="type[]" value="Stage"> Stage</label>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-search">Rechercher</button>
+    </form>
+  </section>
+
+<main class="container ads-page">
+  <h1><%= title %></h1>
     
     <% if (offres.length === 0) { %>
       <p class="error">Aucune offre disponible pour le moment.</p>
@@ -96,5 +137,7 @@
   </main>
 
   <script src="/js/ads-list.js"></script>
+  <script src="/js/search.js"></script>
+
 </body>
 </html>

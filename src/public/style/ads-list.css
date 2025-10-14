@@ -1,11 +1,7 @@
+
 /* ==============================
    CONTAINER
    ============================== */
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 40px 20px;
-}
 
 .container h1 {
   margin-bottom: 30px;
@@ -25,21 +21,21 @@
    ============================== */
 .jobs-grid {
   display: grid;
-  gap: 20px;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  padding: 20px 0;
+  gap: 100px;
+  padding: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
 }
 
 /* ==============================
    CARD WRAPPER
    ============================== */
 .job-card-wrapper {
-  height: 450px;
+  height: 300px;
   position: relative;
 }
 
 /* ==============================
-   CARD INNER (pas de 3D, juste une transition d'opacité)
+   CARD INNER
    ============================== */
 .job-card-inner {
   position: relative;
@@ -56,22 +52,22 @@
   height: 100%;
   top: 0;
   left: 0;
-
+  
   /* Transition pour le fade */
   opacity: 1;
   visibility: visible;
   transition: opacity 0.3s ease, visibility 0.3s ease;
-
+  
   /* Styles visuels */
   background: var(--card);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 20px;
-
+  
   /* Flexbox pour organiser le contenu */
   display: flex;
   flex-direction: column;
-
+  
   /* Gérer le débordement */
   overflow: hidden;
 }
@@ -174,7 +170,7 @@
   color: var(--muted);
   background: #f9fafb;
   border-radius: 8px;
-  max-height: 180px;
+  max-height: 1800px;
   overflow-y: auto;
 }
 
@@ -353,13 +349,11 @@
   flex: 1;
 }
 
+
 /* ==============================
-   RESPONSIVE
+   RESPONSIVE - CONSOLIDÉ
    ============================== */
 @media (max-width: 768px) {
-  .container {
-    padding: 20px 12px;
-  }
 
   .container h1 {
     font-size: 24px;
@@ -367,16 +361,17 @@
   }
 
   .jobs-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 50px;
   }
 
   .job-card-wrapper {
-    height: 420px;
+    max-height: 250px;
   }
 
   .job-card {
     padding: 16px;
+  
   }
 
   .form-group {
@@ -384,12 +379,17 @@
   }
 }
 
-@media (max-width: 480px) {
-  .job-card-wrapper {
-    height: 480px;
-  }
+/* ==============================
+   PADDING SPÉCIFIQUE POUR LA PAGE DES OFFRES
+   ============================== */
+.container.ads-page {
+  padding: 30px 60px; /* Vos marges personnalisées */
+}
 
-  .quick-apply-form {
-    gap: 10px;
+@media (max-width: 768px) {
+  .container.ads-page {
+    padding: 20px 40px;
   }
 }
+
+

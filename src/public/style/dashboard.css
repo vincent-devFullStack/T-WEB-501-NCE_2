@@ -54,6 +54,25 @@
   color: #1f2937;
 }
 
+/* Permettre aux clics de traverser vers le parent */
+.chart-with-legend,
+.donut-container,
+.donut,
+.donut-center,
+.legend,
+.legend-item,
+.legend-color,
+.legend-text,
+.legend-value {
+  pointer-events: none;
+}
+
+/* Garder les interactions sur les cartes principales */
+.kpi-card-item {
+  pointer-events: auto;
+}
+
+
 /* ==============================
    GRAPHIQUE + LÉGENDE EN LIGNE
    ============================== */

@@ -6,6 +6,32 @@ import { requireAuth, requireRole } from "../middleware/auth.js";
 const r = Router();
 
 /**
+ * GET /ads - Liste publique de toutes les offres actives
+ */
+r.get("/", async (req, res) => {
+  try {
+    const [advertisements] = await pool.query(`
+      SELECT 
+        a.*,
+        c.company_name
+      FROM advertisements a
+      LEFT JOIN companies c ON a.company_id = c.company_id
+      WHERE a.status = 'active'
+      ORDER BY a.created_at DESC
+    `);
+
+    return res.render("ads/list", {
+      title: "Toutes les offres",
+      offres: advertisements,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send("Erreur lors du chargement des offres.");
+  }
+});
+
+
+/**
  * GET /ads/new – page de création (réservée aux recruteurs)
  */
 r.get("/new", requireAuth, requireRole("recruteur"), async (req, res) => {

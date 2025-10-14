@@ -43,14 +43,12 @@
     const data = new FormData(form);
     const payload = {
       keywords: data.get("keywords")?.trim() || "",
-      location: data.get("location")?.trim() || "",
       types: data.getAll("type[]"),
     };
 
     // Construction de l'URL avec paramètres
     const params = new URLSearchParams();
     if (payload.keywords) params.set("q", payload.keywords);
-    if (payload.location) params.set("loc", payload.location);
     if (payload.types.length) params.set("type", payload.types.join(","));
 
     // Redirection vers la page de résultats
@@ -82,15 +80,17 @@ function renderFilterTags() {
     return tag;
   }
 
+  // Mots-clés : un tag par mot
   const q = params.get('q');
-  if (q) container.append(createTag(q, 'q', q));
+  if (q) {
+    const terms = q.split(/\s+/).filter(t => t);
+    terms.forEach(term => container.append(createTag(term, 'q', term)));
+  }
 
-  const loc = params.get('loc');
-  if (loc) container.append(createTag(loc, 'loc', loc));
-
-  const types = params.get('type')?.split(',') || [];
+  // Types de contrat
+  const types = params.get('type')?.split(',')?.map(t => t.trim()).filter(t => t) || [];
   types.forEach(type => {
-    if (type) container.append(createTag(type, 'type', type));
+    container.append(createTag(type, 'type', type));
   });
 
   const main = document.querySelector('main.container');
@@ -107,6 +107,13 @@ function removeFilter(key, value) {
     const filtered = arr.filter(v => v !== value);
     if (filtered.length) params.set('type', filtered.join(','));
     else params.delete('type');
+
+  } else if (key === 'q') {
+    // Reconstruire q sans le terme supprimé
+    const terms = params.get('q')?.split(/\s+/).filter(t => t && t !== value) || [];
+    if (terms.length) params.set('q', terms.join(' '));
+    else params.delete('q');
+
   } else {
     params.delete(key);
   }
@@ -116,5 +123,28 @@ function removeFilter(key, value) {
   window.location.href = query ? `${base}?${query}` : base;
 }
 
+// ==============================
+// FILTRAGE CÔTÉ CLIENT (insensible à la casse, multi-mots-clés & multi-types)
+// ==============================
+function applyClientFilters() {
+  const params = new URLSearchParams(window.location.search);
+  const q = params.get('q')?.toLowerCase().split(/\s+/).filter(t => t) || [];
+  const types = params.get('type')?.split(',').map(t => t.toLowerCase()) || [];
+
+  document.querySelectorAll('.job-card-wrapper').forEach(wrapper => {
+    const front = wrapper.querySelector('.job-card-front');
+    const title = front.querySelector('h3').textContent.toLowerCase();
+    const contractEl = front.querySelector('.contract-type');
+    const contract = contractEl ? contractEl.textContent.toLowerCase() : '';
+
+    // Tous les mots-clés doivent matcher
+    const matchQ = !q.length || q.every(term => title.includes(term));
+    // Au moins un type doit matcher
+    const matchType = !types.length || types.every(t => contract === t);
+    wrapper.style.display = (matchQ && matchType) ? '' : 'none';
+  });
+}
+
 // Appel au chargement de la page
 renderFilterTags();
+applyClientFilters();

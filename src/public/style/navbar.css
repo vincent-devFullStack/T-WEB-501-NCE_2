@@ -256,12 +256,12 @@ header.scrolled {
 }
 
 .notification-badge {
-  display: inline-flex !important;
+  display: none;
   position: absolute;
   top: -8px;
   right: -8px;
-  background: #ef4444 !important;
-  color: white !important;
+  background: #ef4444;
+  color: white;
   font-size: 11px;
   font-weight: 700;
   padding: 2px 6px;
@@ -273,6 +273,22 @@ header.scrolled {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   z-index: 10;
   line-height: 1;
+}
+
+.notification-badge.is-visible {
+  display: inline-flex;
+}
+
+#navbar .dropdown-content .dropdown-link-with-badge {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#navbar .dropdown-content .dropdown-link-with-badge .notification-badge {
+  position: static;
+  margin-left: auto;
+  top: auto;
+  right: auto;
 }
 
 /* Responsive */

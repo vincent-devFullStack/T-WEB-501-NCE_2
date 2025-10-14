@@ -1,6 +1,7 @@
 // public/js/notifications.js
 
-let notificationInterval;
+let notificationInterval = null;
+let pollingActive = false;
 
 // Récupérer le nombre total de candidatures "reçues"
 async function fetchNotificationsCount() {
@@ -12,7 +13,7 @@ async function fetchNotificationsCount() {
     if (!response.ok) return;
 
     const data = await response.json();
-    updateGlobalNotificationBadge(data.count);
+    updateGlobalNotificationBadge(Number(data.count) || 0);
   } catch (e) {
     console.error("Erreur fetch notifications:", e);
   }
@@ -28,42 +29,41 @@ async function fetchAdNotificationsCount(adId) {
     if (!response.ok) return;
 
     const data = await response.json();
-    updateAdNotificationBadge(adId, data.count);
+    updateAdNotificationBadge(adId, Number(data.count) || 0);
   } catch (e) {
     console.error("Erreur fetch ad notifications:", e);
   }
 }
 
+function toggleBadge(badge, count) {
+  if (!badge) return;
+  if (count > 0) {
+    badge.textContent = count > 99 ? "99+" : String(count);
+    badge.classList.add("is-visible");
+  } else {
+    badge.textContent = "";
+    badge.classList.remove("is-visible");
+  }
+}
+
 // Mettre à jour le badge global (navbar "Mes offres")
 function updateGlobalNotificationBadge(count) {
-  const badge = document.querySelector(".global-notification-badge");
-
-  if (badge) {
-    if (count > 0) {
-      badge.textContent = count > 99 ? "99+" : count;
-      badge.style.display = "inline-flex";
-    } else {
-      badge.style.display = "none";
-    }
-  }
+  const badges = document.querySelectorAll(".global-notification-badge");
+  if (!badges.length) return;
+  badges.forEach((badge) => toggleBadge(badge, count));
 }
 
 // Mettre à jour le badge d'une offre spécifique
 function updateAdNotificationBadge(adId, count) {
   const badge = document.querySelector(`[data-ad-notification="${adId}"]`);
-
-  if (badge) {
-    if (count > 0) {
-      badge.textContent = count > 99 ? "99+" : count;
-      badge.style.display = "inline-flex";
-    } else {
-      badge.style.display = "none";
-    }
-  }
+  toggleBadge(badge, count);
 }
 
 // Démarrer le polling (vérifier toutes les 30 secondes)
 function startNotificationPolling() {
+  if (pollingActive) return;
+  pollingActive = true;
+
   // Vérifier immédiatement
   fetchNotificationsCount();
 
@@ -89,7 +89,9 @@ function startNotificationPolling() {
 function stopNotificationPolling() {
   if (notificationInterval) {
     clearInterval(notificationInterval);
+    notificationInterval = null;
   }
+  pollingActive = false;
 }
 
 // Exporter les fonctions
@@ -100,7 +102,43 @@ window.notificationSystem = {
   refreshAd: fetchAdNotificationsCount,
 };
 
-// Auto-start si utilisateur est recruteur
-if (document.body.dataset.role === "recruteur") {
-  startNotificationPolling();
+// Fonction d'initialisation qui attend que la navbar soit prête
+function initNotifications() {
+  const MAX_BADGE_RETRIES = 10;
+  let badgeRetryAttempts = 0;
+
+  const attemptStart = () => {
+    if (document.body.dataset.role !== "recruteur") {
+      stopNotificationPolling();
+      return;
+    }
+
+    const badge = document.querySelector(".global-notification-badge");
+
+    if (!badge) {
+      if (badgeRetryAttempts < MAX_BADGE_RETRIES) {
+        badgeRetryAttempts += 1;
+        window.requestAnimationFrame(attemptStart);
+      }
+      return;
+    }
+
+    startNotificationPolling();
+  };
+
+  if (
+    document.body.dataset.role === "recruteur" &&
+    document.querySelector(".global-notification-badge")
+  ) {
+    attemptStart();
+  } else {
+    document.addEventListener("navbarReady", attemptStart, { once: true });
+  }
+}
+
+// Auto-start avec attente
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initNotifications);
+} else {
+  initNotifications();
 }

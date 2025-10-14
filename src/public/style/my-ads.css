@@ -83,10 +83,22 @@ header {
    ======================================== */
 
 .ads-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
   margin-top: 2rem;
+}
+
+@media (min-width: 992px) {
+  .ads-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1400px) {
+  .ads-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 /* ========================================
@@ -233,6 +245,21 @@ header {
 .ad-actions .btn {
   font-size: 0.9rem;
   padding: 0.5rem 1rem;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ad-actions .btn.btn-primary {
+  padding-right: 3.25rem;
+}
+
+.ad-actions .btn .notification-badge {
+  top: 50%;
+  right: 0.75rem;
+  transform: translateY(-50%);
 }
 
 /* ========================================
@@ -309,10 +336,16 @@ header {
   .create-header {
     flex-direction: column;
     align-items: stretch;
+    gap: 1rem;
   }
 
   .create-header h1 {
     font-size: 1.5rem;
+  }
+
+  .create-header .btn {
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .ad-header {
@@ -334,6 +367,7 @@ header {
 
   .ad-actions .btn {
     width: 100%;
+    box-sizing: border-box;
   }
 }
 

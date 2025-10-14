@@ -107,7 +107,10 @@ async function buildNavbar() {
           }
           ${
             user.role === "recruteur"
-              ? '<a href="/ads/my-ads" role="menuitem">Mes offres</a>'
+              ? `<a href="/ads/my-ads" role="menuitem" class="dropdown-link-with-badge">
+                  <span>Mes offres</span>
+                  <span class="notification-badge global-notification-badge"></span>
+                </a>`
               : ""
           }
           <button id="logoutBtn" class="linklike" role="menuitem">Déconnexion</button>
@@ -153,6 +156,9 @@ async function buildNavbar() {
       location.href = "/";
     }
   });
+
+  // Déclencher l'événement custom pour notifier que la navbar est prête
+  document.dispatchEvent(new CustomEvent("navbarReady"));
 }
 
 if (document.readyState === "loading") {

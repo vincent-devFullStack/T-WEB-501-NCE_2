@@ -200,3 +200,20 @@ async function fetchJobDetails(id) {
 }
 
 console.log('✅ Script ads-list.js chargé');
+
+// ==============================
+// NORMALISATION DES PASTILLES DE CONTRAT
+// ==============================
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.job-card .contract-type').forEach(el => {
+    const raw = el.textContent.trim().toLowerCase();
+    let text;
+    if (raw === 'cdi' || raw === 'cdd') {
+      text = raw.toUpperCase();           // CDI ou CDD
+    } else {
+      text = raw.charAt(0).toUpperCase()   // Alternance, Stage…
+           + raw.slice(1).toLowerCase();
+    }
+    el.textContent = text;
+  });
+});

@@ -1,3 +1,11 @@
+/* ==============================
+   BOX-SIZING SPÉCIFIQUE À ADS-LIST
+   ============================== */
+.ads-page *,
+.ads-page *::before,
+.ads-page *::after {
+  box-sizing: border-box;
+}
 
 /* ==============================
    CONTAINER
@@ -48,11 +56,12 @@
 }
 
 /* ==============================
-   CARD WRAPPER
+   CARD WRAPPER - CONTENEUR PRINCIPAL
    ============================== */
 .job-card-wrapper {
-  height: 320px;
   position: relative;
+  transition: all 0.4s ease;
+  /* Pas de height fixe, on laisse le contenu définir la taille */
 }
 
 /* ==============================
@@ -61,27 +70,23 @@
 .job-card-inner {
   position: relative;
   width: 100%;
-  height: 100%;
 }
 
 /* ==============================
-   JOB CARD (base commune aux 2 faces)
+   JOB CARD - CARTE DE BASE
    ============================== */
 .job-card {
-  position: absolute;
+  position: relative;
   width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
   
   /* Transition pour le fade */
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.2s ease;
   
   /* Styles visuels */
   background: linear-gradient(155deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.6) 100%);
-  border-radius: 22px;
+  border-radius: 22px;  /* IMPORTANT : arrondi de la card */
   box-shadow: 0 25px 45px rgba(15, 23, 42, 0.15);
   padding: 22px;
   backdrop-filter: blur(18px);
@@ -91,7 +96,7 @@
   display: flex;
   flex-direction: column;
   
-  /* Gérer le débordement */
+  /* CRITIQUE : overflow hidden pour respecter les arrondis */
   overflow: hidden;
 }
 
@@ -99,6 +104,7 @@
    RECTO (face avant) - visible par défaut
    ============================== */
 .job-card-front {
+  position: relative;
   z-index: 2;
   opacity: 1;
   visibility: visible;
@@ -113,27 +119,20 @@
    VERSO (face arrière) - caché par défaut
    ============================== */
 .job-card-back {
-  z-index: 1;
-  opacity: 0;
-  visibility: hidden;
-  overflow-y: auto;
+  display: none;
+  position: relative;
+  margin-top: 16px;
 }
 
 /* ==============================
-   QUAND ON AJOUTE .expanded - FADE
+   QUAND ON AJOUTE .expanded
    ============================== */
-/* Cacher le recto */
 .job-card-wrapper.expanded .job-card-front {
-  opacity: 0;
-  visibility: hidden;
-  z-index: 1;
+  display: none;
 }
 
-/* Afficher le verso */
 .job-card-wrapper.expanded .job-card-back {
-  opacity: 1;
-  visibility: visible;
-  z-index: 2;
+  display: block;
 }
 
 /* ==============================
@@ -161,7 +160,14 @@
 }
 
 .job-card .contract-type {
-  font-weight: 500;
+  display: inline-block;
+  padding: 6px 14px;
+  background: color-mix(in srgb, var(--brand) 16%, transparent);
+  color: var(--brand);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 8px;
 }
 
 .job-card .salary {
@@ -183,7 +189,7 @@
 }
 
 /* ==============================
-   JOB DETAILS (quand on clique sur "En savoir plus")
+   JOB DETAILS - SECTION DÉTAILS
    ============================== */
 .job-details {
   margin-top: 12px;
@@ -193,40 +199,7 @@
   color: var(--muted);
   background: rgba(248, 250, 252, 0.65);
   border-radius: 14px;
-  max-height: 1800px;
-  overflow-y: auto;
-}
-
-@media (max-width: 768px) {
-  .jobs-grid {
-    gap: 24px;
-    padding: 16px;
-  }
-
-  .job-card-wrapper {
-    height: auto;
-  }
-
-  .job-card-inner {
-    position: static;
-    height: auto;
-  }
-
-  .job-card {
-    position: static;
-    height: auto;
-  }
-
-  .job-card-back {
-    display: none;
-    opacity: 1;
-    visibility: visible;
-    margin-top: 16px;
-  }
-
-  .job-card-wrapper.expanded .job-card-back {
-    display: block;
-  }
+  /* SUPPRIMÉ max-height et overflow-y pour permettre l'expansion complète */
 }
 
 .job-details h4 {
@@ -251,7 +224,7 @@
   display: flex;
   gap: 8px;
   padding-top: 10px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid rgba(148, 163, 184, 0.25);
 }
 
 /* ==============================
@@ -311,7 +284,6 @@
   padding-top: 8px;
 }
 
-/* Dans votre fichier CSS */
 #apply-fieldset:disabled {
   opacity: 0.5;
   pointer-events: none;
@@ -325,7 +297,6 @@
   transform: none !important;
 }
 
-/* Style spécifique pour le bouton submit */
 #apply-submit-btn:disabled,
 #apply-fieldset:disabled #apply-submit-btn {
   cursor: not-allowed;
@@ -404,12 +375,10 @@
   flex: 1;
 }
 
-
 /* ==============================
-   RESPONSIVE - CONSOLIDÉ
+   RESPONSIVE - MOBILE & TABLETTE
    ============================== */
 @media (max-width: 768px) {
-
   .container h1 {
     font-size: 24px;
     margin-bottom: 20px;
@@ -417,16 +386,26 @@
 
   .jobs-grid {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 50px;
+    gap: 30px;
+    padding: 16px;
   }
 
-  .job-card-wrapper {
-    max-height: 250px;
+  .job-card-inner {
+    position: static;
   }
 
   .job-card {
+    position: static;
     padding: 16px;
-  
+  }
+
+  .job-card-back {
+    display: none;
+    margin-top: 16px;
+  }
+
+  .job-card-wrapper.expanded .job-card-back {
+    display: block;
   }
 
   .ads-filter-banner {
@@ -449,7 +428,7 @@
    PADDING SPÉCIFIQUE POUR LA PAGE DES OFFRES
    ============================== */
 .container.ads-page {
-  padding: 30px 60px; /* Vos marges personnalisées */
+  padding: 30px 60px;
 }
 
 @media (max-width: 768px) {

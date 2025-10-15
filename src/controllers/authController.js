@@ -1,15 +1,12 @@
-import { pool } from "../config/db.js";
+import { User } from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 /* ---------- Service commun ---------- */
 async function getUserByEmail(email) {
-  const [rows] = await pool.query(
-    "SELECT * FROM people WHERE email = ? LIMIT 1",
-    [email]
-  );
-  return rows[0] || null;
+  return User.findByEmail(email);
 }
+
 function signAuthCookie(res, payload) {
   const token = jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES,
@@ -31,13 +28,13 @@ export async function apiLogin(req, res) {
     const user = await getUserByEmail(email);
     if (!user)
       return res.status(401).json({ error: "Utilisateur introuvable" });
-    const ok = await bcrypt.compare(password, user.password_hash || "");
+    const ok = await bcrypt.compare(password, user?.passwordHash || "");
     if (!ok) return res.status(401).json({ error: "Mot de passe incorrect" });
 
-    signAuthCookie(res, { id: user.person_id, role: user.person_type });
+    signAuthCookie(res, { id: user.id, role: user.role });
     return res.json({
-      message: "Connecté",
-      user: { id: user.person_id, role: user.person_type },
+      message: "Connecte",
+      user: { id: user.id, role: user.role },
     });
   } catch (e) {
     console.error("Login error:", e);
@@ -47,7 +44,7 @@ export async function apiLogin(req, res) {
 
 export async function apiLogout(_req, res) {
   res.clearCookie("token");
-  return res.json({ message: "Déconnecté" });
+  return res.json({ message: "Deconnecte" });
 }
 
 export async function apiRegister(req, res) {
@@ -68,27 +65,25 @@ export async function apiRegister(req, res) {
     if (!["candidat", "recruteur"].includes(person_type)) {
       return res.status(400).json({ error: "Type utilisateur invalide" });
     }
-    const [existing] = await pool.query(
-      "SELECT person_id FROM people WHERE email = ? LIMIT 1",
-      [email]
-    );
-    if (existing.length)
-      return res.status(409).json({ error: "Email déjà utilisé" });
+    const existing = await User.findByEmail(email);
+    if (existing) return res.status(409).json({ error: "Email deja utilise" });
 
     const hash = await bcrypt.hash(password, 10);
-    const [r] = await pool.query(
-      `INSERT INTO people
-       (first_name, last_name, email, password_hash, phone, linkedin_url, person_type, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
-      [first_name, last_name, email, hash, phone, linkedin_url, person_type]
-    );
-    signAuthCookie(res, { id: r.insertId, role: person_type });
-    return res
-      .status(201)
-      .json({
-        message: "Compte créé",
-        user: { id: r.insertId, role: person_type },
-      });
+    const newUser = await User.create({
+      firstName: first_name,
+      lastName: last_name,
+      email,
+      passwordHash: hash,
+      phone,
+      linkedinUrl: linkedin_url,
+      role: person_type,
+      isActive: 1,
+    });
+    signAuthCookie(res, { id: newUser.id, role: newUser.role });
+    return res.status(201).json({
+      message: "Compte cree",
+      user: { id: newUser.id, role: newUser.role },
+    });
   } catch (e) {
     console.error("Register error:", e);
     return res.status(500).json({ error: "Erreur serveur" });
@@ -104,6 +99,7 @@ export function apiMe(req, res) {
 export function pageLoginGet(_req, res) {
   res.render("auth/login", { title: "Connexion" });
 }
+
 export async function pageLoginPost(req, res) {
   const { email, password } = req.body || {};
   if (!email || !password)
@@ -119,7 +115,7 @@ export async function pageLoginPost(req, res) {
           title: "Connexion",
           error: "Utilisateur introuvable",
         });
-    const ok = await bcrypt.compare(password, user.password_hash || "");
+    const ok = await bcrypt.compare(password, user?.passwordHash || "");
     if (!ok)
       return res
         .status(401)
@@ -128,8 +124,8 @@ export async function pageLoginPost(req, res) {
           error: "Mot de passe incorrect",
         });
 
-    signAuthCookie(res, { id: user.person_id, role: user.person_type });
-    return res.redirect("/"); // success → retour à l’accueil
+    signAuthCookie(res, { id: user.id, role: user.role });
+    return res.redirect("/"); // success: retour a l'accueil
   } catch (e) {
     console.error("pageLoginPost:", e);
     return res
@@ -141,6 +137,7 @@ export async function pageLoginPost(req, res) {
 export function pageSignupGet(_req, res) {
   res.render("auth/signup", { title: "Inscription" });
 }
+
 export async function pageSignupPost(req, res) {
   try {
     const {
@@ -166,26 +163,26 @@ export async function pageSignupPost(req, res) {
           error: "Type utilisateur invalide",
         });
     }
-    const [existing] = await pool.query(
-      "SELECT person_id FROM people WHERE email = ? LIMIT 1",
-      [email]
-    );
-    if (existing.length) {
+    const existing = await User.findByEmail(email);
+    if (existing) {
       return res
         .status(409)
         .render("auth/signup", {
           title: "Inscription",
-          error: "Email déjà utilisé",
+          error: "Email deja utilise",
         });
     }
 
     const hash = await bcrypt.hash(password, 10);
-    const [r] = await pool.query(
-      `INSERT INTO people (first_name,last_name,email,password_hash,person_type,is_active)
-       VALUES (?,?,?,?,?,1)`,
-      [first_name, last_name, email, hash, person_type]
-    );
-    signAuthCookie(res, { id: r.insertId, role: person_type });
+    const newUser = await User.create({
+      firstName: first_name,
+      lastName: last_name,
+      email,
+      passwordHash: hash,
+      role: person_type,
+      isActive: 1,
+    });
+    signAuthCookie(res, { id: newUser.id, role: newUser.role });
     return res.redirect("/");
   } catch (e) {
     console.error("pageSignupPost:", e);

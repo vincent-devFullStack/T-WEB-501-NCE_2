@@ -12,6 +12,28 @@ async function fetchAds() {
   }
 }
 
+const adDetailsCache = new Map();
+
+async function fetchAdDetails(adId) {
+  const key = Number(adId);
+  if (adDetailsCache.has(key)) return adDetailsCache.get(key);
+  try {
+    const r = await fetch(`/api/ads/${key}/detail`, {
+      credentials: "include",
+    });
+    if (!r.ok) throw new Error(`fetch detail failed with ${r.status}`);
+    const data = await r.json();
+    const ad = data?.ad || null;
+    if (ad) {
+      adDetailsCache.set(key, ad);
+    }
+    return ad;
+  } catch (e) {
+    console.error("fetchAdDetails error:", e);
+    return null;
+  }
+}
+
 // Vérifier si l'utilisateur a déjà postulé
 async function checkIfAlreadyApplied(adId) {
   try {
@@ -210,22 +232,20 @@ async function loadJobs() {
   // ---------- Evénements (délégation sur le container) ----------
 
   // Déployer / replier les détails
-  wrap.addEventListener("click", async (e) => {
+    wrap.addEventListener("click", async (e) => {
     const moreBtn = e.target.closest("button.js-more[data-id]");
     if (!moreBtn) return;
 
     const id = Number(moreBtn.dataset.id);
-    const ad = ads.find((x) => x.ad_id === id);
-    if (!ad) return;
+    const summary = ads.find((x) => x.ad_id === id);
+    if (!summary) return;
 
     const card = moreBtn.closest(".job-card");
     if (!card) return;
 
     const existing = card.querySelector(".job-details");
     if (existing) {
-      // Repli
       existing.remove();
-      // Réinjection du bouton "En savoir plus"
       if (!card.querySelector(".job-card-actions")) {
         card.insertAdjacentHTML(
           "beforeend",
@@ -237,50 +257,61 @@ async function loadJobs() {
       return;
     }
 
-    // On déploie
+    const detail = await fetchAdDetails(id);
+    if (!detail) {
+      console.error("Impossible de charger les details de l'offre:", id);
+      return;
+    }
+
+    const combined = { ...summary, ...detail };
+    const salary = formatSalary(
+      combined.salary_min,
+      combined.salary_max,
+      combined.currency
+    );
+
     card.querySelector(".job-card-actions")?.remove();
-    const salary = formatSalary(ad.salary_min, ad.salary_max, ad.currency);
 
-    // ✅ Vérifier si déjà postulé AVANT d'insérer le HTML
     const alreadyApplied = await checkIfAlreadyApplied(id);
-
-    // ✅ Adapter le bouton selon le statut
     const applyButtonHTML = alreadyApplied
-      ? `<button class="btn btn-apply js-apply" data-id="${id}" disabled style="background-color: #1fa435ff; transition:none; transform:none; box-shadow:none; pointer-events:none;">Déjà postulé ✓</button>`
+      ? `<button class="btn btn-apply js-apply" data-id="${id}" disabled style="background-color: #1fa435ff; transition:none; transform:none; box-shadow:none; pointer-events:none;">Deja postule</button>`
       : `<button class="btn btn-apply js-apply" data-id="${id}">Candidature rapide</button>`;
 
     card.insertAdjacentHTML(
       "beforeend",
       `
   <div class="job-details">
-    <h4>Détails</h4>
-    <p><strong>Poste :</strong> ${esc(ad.job_title)}</p>
-    <p><strong>Entreprise :</strong> ${esc(ad.company_name ?? "")}</p>
-    <p><strong>Lieu :</strong> ${esc(ad.location ?? "")}</p>
+    <h4>Details</h4>
+    <p><strong>Poste :</strong> ${esc(combined.job_title)}</p>
+    <p><strong>Entreprise :</strong> ${esc(combined.company_name ?? "")}</p>
+    <p><strong>Lieu :</strong> ${esc(combined.location ?? "")}</p>
     <p><strong>Contrat :</strong> ${esc(
-      formatContractType(ad.contract_type) ?? ""
+      formatContractType(combined.contract_type) ?? ""
     )}</p>
     <p><strong>Salaire :</strong> ${esc(salary)}</p>
     ${
-      ad.job_description
-        ? `<p><strong>Description :</strong><br>${esc(ad.job_description)}</p>`
+      combined.job_description
+        ? `<p><strong>Description :</strong><br>${esc(
+            combined.job_description
+          )}</p>`
         : ""
     }
     ${
-      ad.requirements
-        ? `<p><strong>Besoins / Pré-requis :</strong><br>${esc(
-            ad.requirements
+      combined.requirements
+        ? `<p><strong>Besoins / Pre-requis :</strong><br>${esc(
+            combined.requirements
           )}</p>`
         : ""
     }
     <div class="job-details-actions">
       ${applyButtonHTML}
-      <button class="btn btn-secondary js-close-details" data-id="${id}">Réduire</button>
+      <button class="btn btn-secondary js-close-details" data-id="${id}">Reduire</button>
     </div>
   </div>
   `
     );
   });
+
 
   // Bouton "Réduire"
   wrap.addEventListener("click", (e) => {

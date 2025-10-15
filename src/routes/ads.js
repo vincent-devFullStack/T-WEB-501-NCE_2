@@ -22,15 +22,27 @@ r.get("/", async (req, res) => {
 
     const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
 
-    const [advertisements] = await pool.query(`
-      SELECT 
-        a.*,
+    const [advertisements] = await pool.query(
+      `
+      SELECT
+        a.ad_id,
+        a.company_id,
+        a.job_title,
+        a.location,
+        a.contract_type,
+        a.salary_min,
+        a.salary_max,
+        a.currency,
+        a.created_at,
+        a.deadline_date,
         c.company_name
       FROM advertisements a
       LEFT JOIN companies c ON a.company_id = c.company_id
       ${whereClause}
       ORDER BY a.created_at DESC
-    `, params);
+    `,
+      params
+    );
 
     let companyInfo = null;
     if (Number.isInteger(companyId) && companyId > 0) {

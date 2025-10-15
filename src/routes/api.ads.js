@@ -4,6 +4,7 @@ import { pool } from "../config/db.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import multer from "multer";
 import { storage } from "../config/cloudinary.js";
+import { Ad } from "../models/Ad.js";
 
 const router = Router();
 
@@ -27,17 +28,8 @@ const upload = multer({
 // ------------------------------------------------------------------
 router.get("/", async (_req, res) => {
   try {
-    const [advertisements] = await pool.query(`
-      SELECT 
-        a.*,
-        c.company_name
-      FROM advertisements a
-      LEFT JOIN companies c ON a.company_id = c.company_id
-      WHERE a.status = 'active'
-      ORDER BY a.created_at DESC
-    `);
-
-    res.json({ ads: advertisements });
+    const ads = await Ad.listPublicActive();
+    res.json({ ads });
   } catch (error) {
     console.error("Erreur lors de la récupération des annonces:", error);
     res.status(500).json({ error: "Erreur serveur" });
@@ -185,6 +177,23 @@ router.get(
 // ------------------------------------------------------------------
 // Vérifier si l'utilisateur a déjà postulé (sauf si refusé)
 // ------------------------------------------------------------------
+router.get("/:id/detail", async (req, res) => {
+  try {
+    const adId = Number(req.params.id);
+    if (!Number.isInteger(adId) || adId <= 0) {
+      return res.status(400).json({ error: "ID invalide" });
+    }
+    const ad = await Ad.findPublicById(adId);
+    if (!ad) {
+      return res.status(404).json({ error: "Offre introuvable" });
+    }
+    return res.json({ ad });
+  } catch (e) {
+    console.error("Erreur lors du chargement du detail d'offre:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 router.get("/:id/check-applied", async (req, res) => {
   try {
     if (!req.user?.id) {

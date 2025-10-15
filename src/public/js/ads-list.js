@@ -7,6 +7,7 @@ const jobsList = document.getElementById('jobs-list');
 if (!jobsList) {
   console.error('❌ Element #jobs-list non trouvé');
 }
+const adDetailsCache = new Map();
 
 // ==============================
 // BOUTON "EN SAVOIR PLUS"
@@ -185,16 +186,22 @@ function escapeHtml(text) {
 }
 
 async function fetchJobDetails(id) {
+  const key = Number(id);
+  if (adDetailsCache.has(key)) return adDetailsCache.get(key);
   try {
-    const response = await fetch('/api/ads', { credentials: 'include' });
+    const response = await fetch(`/api/ads/${key}/detail`, {
+      credentials: 'include',
+    });
     if (!response.ok) throw new Error('Erreur API');
-    
+
     const data = await response.json();
-    const ads = Array.isArray(data) ? data : data.ads || [];
-    
-    return ads.find(ad => ad.ad_id === Number(id));
+    const ad = data?.ad || null;
+    if (ad) {
+      adDetailsCache.set(key, ad);
+    }
+    return ad;
   } catch (error) {
-    console.error('❌ Erreur fetchJobDetails:', error);
+    console.error('Erreur fetchJobDetails:', error);
     return null;
   }
 }

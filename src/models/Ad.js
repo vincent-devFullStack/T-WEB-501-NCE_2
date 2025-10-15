@@ -147,6 +147,70 @@ export const Ad = {
     ]);
     return r.affectedRows > 0;
   },
+
+  async listPublicActive({ companyId = null } = {}) {
+    const where = ["a.status = 'active'"];
+    const params = [];
+    if (companyId) {
+      where.push("a.company_id = ?");
+      params.push(companyId);
+    }
+    const sql = `
+      SELECT
+        a.ad_id,
+        a.company_id,
+        a.job_title,
+        a.location,
+        a.contract_type,
+        a.salary_min,
+        a.salary_max,
+        a.currency,
+        a.created_at,
+        a.deadline_date,
+        c.company_name
+      FROM advertisements a
+      LEFT JOIN companies c ON a.company_id = c.company_id
+      ${where.length ? "WHERE " + where.join(" AND ") : ""}
+      ORDER BY a.created_at DESC
+    `;
+    const [rows] = await pool.query(sql, params);
+    return rows;
+  },
+
+  async findPublicById(id) {
+    const [rows] = await pool.query(
+      `
+        SELECT
+          a.ad_id,
+          a.company_id,
+          a.contact_person_id,
+          a.job_title,
+          a.job_description,
+          a.requirements,
+          a.location,
+          a.contract_type,
+          a.salary_min,
+          a.salary_max,
+          a.currency,
+          a.deadline_date,
+          a.status,
+          a.created_at,
+          a.updated_at,
+          c.company_name,
+          c.industry,
+          c.company_size,
+          c.website,
+          c.city,
+          c.country
+        FROM advertisements a
+        LEFT JOIN companies c ON a.company_id = c.company_id
+        WHERE a.ad_id = ? AND a.status = 'active'
+        LIMIT 1
+      `,
+      [id]
+    );
+    return rows[0] || null;
+  },
 };
 
 export default Ad;

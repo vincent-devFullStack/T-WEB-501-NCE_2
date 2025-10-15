@@ -8,6 +8,7 @@
   const dropdown = form.querySelector(".dropdown-check");
   const btn = form.querySelector(".dropbtn");
   const keywordInput = form.querySelector('input[name="keywords"]');
+  const locationInput = form.querySelector('input[name="location"]');
 
   if (keywordInput) {
     const datalistId = "search-suggestions";
@@ -37,10 +38,10 @@
         datalist.innerHTML = Array.from(suggestions)
           .filter(Boolean)
           .slice(0, 20)
-          .map((value) => `<option value="${value}"></option>`)
+          .map((v) => `<option value="${v}"></option>`)
           .join("");
-      } catch (error) {
-        console.error("Auto-suggest error:", error);
+      } catch (err) {
+        console.error("Auto-suggest error:", err);
       }
     };
 
@@ -80,34 +81,34 @@
   // Soumission du formulaire - VERSION CUMULATIVE
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-
-    // Récupérer les paramètres actuels de l'URL
     const currentParams = new URLSearchParams(window.location.search);
-
     const data = new FormData(form);
     const newKeywords = data.get("keywords")?.trim() || "";
+    const newLocation = data.get("location")?.trim() || "";
     const newTypes = data.getAll("type[]");
 
-    // CUMUL DES MOTS-CLÉS
+    // Cumul des mots-clés
     if (newKeywords) {
-      const existingKeywords = currentParams.get("q") || "";
-      const allKeywords = existingKeywords
-        ? `${existingKeywords} ${newKeywords}`.trim()
+      const existing = currentParams.get("q") || "";
+      const all = existing
+        ? `${existing} ${newKeywords}`.trim()
         : newKeywords;
-      currentParams.set("q", allKeywords);
+      currentParams.set("q", all);
     }
 
-    // CUMUL DES TYPES DE CONTRAT
+    // Cumul de la localisation
+    if (newLocation) {
+      currentParams.set("loc", newLocation);
+    }
+
+    // Cumul des types de contrat
     if (newTypes.length) {
-      const existingTypes = currentParams.get("type")?.split(",") || [];
-      const allTypes = [...new Set([...existingTypes, ...newTypes])];
-      currentParams.set("type", allTypes.join(","));
+      const existing = currentParams.get("type")?.split(",") || [];
+      const all = [...new Set([...existing, ...newTypes])];
+      currentParams.set("type", all.join(","));
     }
 
-    // Réinitialiser le formulaire pour la prochaine saisie
     form.reset();
-
-    // Redirection avec tous les filtres cumulés
     window.location.href = `/ads?${currentParams.toString()}`;
   });
 })();
@@ -136,19 +137,24 @@ function renderFilterTags() {
     return tag;
   }
 
-  // Mots-clés : un tag par mot
+  // Mots-clés
   const q = params.get("q");
   if (q) {
-    const terms = q.split(/\s+/).filter((t) => t);
-    terms.forEach((term) => container.append(createTag(term, "q", term)));
+    q.split(/\s+/).filter(Boolean)
+     .forEach((t) => container.append(createTag(t, "q", t)));
+  }
+
+  // Localisation
+  const loc = params.get("loc");
+  if (loc) {
+    container.append(createTag(loc, "loc", loc));
   }
 
   // Types de contrat
   const types =
-    params.get("type")?.split(",")?.map((t) => t.trim()).filter((t) => t) ||
-    [];
-  types.forEach((type) => {
-    container.append(createTag(type, "type", type));
+    params.get("type")?.split(",").map((t) => t.trim()).filter(Boolean) || [];
+  types.forEach((t) => {
+    container.append(createTag(t, "type", t));
   });
 
   const main = document.querySelector("main.container");
@@ -163,13 +169,19 @@ function removeFilter(key, value) {
   if (key === "type") {
     const arr = params.get("type")?.split(",") || [];
     const filtered = arr.filter((v) => v !== value);
-    if (filtered.length) params.set("type", filtered.join(","));
-    else params.delete("type");
+    filtered.length
+      ? params.set("type", filtered.join(","))
+      : params.delete("type");
   } else if (key === "q") {
-    const terms =
-      params.get("q")?.split(/\s+/).filter((t) => t && t !== value) || [];
-    if (terms.length) params.set("q", terms.join(" "));
-    else params.delete("q");
+    const terms = params
+      .get("q")
+      ?.split(/\s+/)
+      .filter((t) => t && t !== value) || [];
+    terms.length
+      ? params.set("q", terms.join(" "))
+      : params.delete("q");
+  } else if (key === "loc") {
+    params.delete("loc");
   } else {
     params.delete(key);
   }
@@ -184,21 +196,73 @@ function removeFilter(key, value) {
 // ==============================
 function applyClientFilters() {
   const params = new URLSearchParams(window.location.search);
-  const q = params.get("q")?.toLowerCase().split(/\s+/).filter((t) => t) || [];
-  const types = params.get("type")?.split(",").map((t) => t.toLowerCase()) || [];
+
+  // Mots-clés normalisés
+  const q = params
+    .get("q")
+    ?.toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .split(/\s+/)
+    .filter(Boolean) || [];
+
+  // Localisation normalisée
+  const loc = params
+    .get("loc")
+    ?.toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "") || "";
+
+  // Types de contrat
+  const types = params
+    .get("type")
+    ?.split(",")
+    .map((t) => t.toLowerCase()) || [];
 
   document.querySelectorAll(".job-card-wrapper").forEach((wrapper) => {
     const front = wrapper.querySelector(".job-card-front");
-    const title = front.querySelector("h3").textContent.toLowerCase();
+
+    // Récupération normalisée des champs
+    const title = front
+      .querySelector("h3").textContent
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "");
+
+    const company = front
+      .querySelector(".company-name").textContent
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "");
+
+    const locationText = front
+      .querySelector(".muted").textContent
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "");
+
     const contractEl = front.querySelector(".contract-type");
     const contract = contractEl ? contractEl.textContent.toLowerCase() : "";
 
-    const matchQ = !q.length || q.every((term) => title.includes(term));
-    const matchType = !types.length || types.every((t) => contract === t);
-    wrapper.style.display = matchQ && matchType ? "" : "none";
+    // Filtre mots-clés (AND logique sur titre OU entreprise)
+    const matchQ =
+      !q.length ||
+      q.every((term) =>
+        title.includes(term) || company.includes(term)
+      );
+
+    // Filtre localisation (contains sur localisation uniquement)
+    const matchLoc = !loc || locationText.includes(loc);
+
+    // Filtre type de contrat (OU logique)
+    const matchType =
+      !types.length || types.some((t) => contract === t);
+
+    wrapper.style.display =
+      matchQ && matchLoc && matchType ? "" : "none";
   });
 }
 
 // Appel au chargement de la page
 renderFilterTags();
-applyClient
+applyClientFilters();

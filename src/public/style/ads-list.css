@@ -110,10 +110,22 @@
   visibility: visible;
 }
 
-.job-card-front:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 28px 45px rgba(15, 23, 42, 0.22);
+.job-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--brand);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
 }
+
+.job-card-front:hover::before {
+  transform: scaleY(1);
+}
+
 
 /* ==============================
    VERSO (face arrière) - caché par défaut

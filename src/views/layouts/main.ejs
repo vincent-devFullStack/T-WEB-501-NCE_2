@@ -8,6 +8,7 @@
     <!-- CSS global -->
     <link rel="stylesheet" href="/style/main.css" />
     <link rel="stylesheet" href="/style/navbar.css" />
+    <link rel="stylesheet" href="/style/footer.css" />
 
     <!-- (Optionnel) si tu veux minimiser le FOUC thème, on fera un mini inline plus tard -->
   </head>
@@ -21,6 +22,7 @@
     </header>
 
     <main><%- body %></main>
+    <%- include("../partials/footer") %>
 
     <!-- JS global -->
     <script type="module" src="/js/navbar.js"></script>

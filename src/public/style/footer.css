@@ -1,0 +1,44 @@
+footer {
+  background-color: var(--brand, #000000);
+  color: var(--brand-contrast, #ffffff);
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+footer a {
+  color: var(--brand-contrast, #ffffff);
+  text-decoration: none;
+  margin: 0 10px;
+  transition: color 0.3s ease;
+}
+
+footer a:hover {
+  color: var(--brand-hover, #1e90ff);
+}
+
+.footer-content {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+footer nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+  display: inline-flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+footer address {
+  font-style: normal;
+  margin-top: 15px;
+  font-size: 0.9em;
+}
+
+.footer-social a {
+  display: inline-block;
+  margin: 0 8px;
+  font-weight: bold;
+}

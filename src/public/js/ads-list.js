@@ -189,7 +189,7 @@ async function fetchJobDetails(id) {
   const key = Number(id);
   if (adDetailsCache.has(key)) return adDetailsCache.get(key);
   try {
-    const response = await fetch(`/api/ads/${key}/detail`, {
+    const response = await fetch(`/api/ads/${key}`, {
       credentials: 'include',
     });
     if (!response.ok) throw new Error('Erreur API');

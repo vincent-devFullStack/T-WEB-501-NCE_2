@@ -177,6 +177,23 @@ export const Ad = {
     return rows;
   },
 
+  async listPublicWithRelations() {
+    const [rows] = await pool.query(
+      `
+      SELECT 
+        a.*,
+        c.company_name,
+        CONCAT(p.first_name, ' ', p.last_name) AS contact_name
+      FROM advertisements a
+      LEFT JOIN companies c ON a.company_id = c.company_id
+      LEFT JOIN people p ON a.contact_person_id = p.person_id
+      WHERE a.status = 'active'
+      ORDER BY a.created_at DESC
+    `
+    );
+    return rows;
+  },
+
   async findPublicById(id) {
     const [rows] = await pool.query(
       `

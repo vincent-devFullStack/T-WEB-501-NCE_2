@@ -177,7 +177,7 @@ router.get(
 // ------------------------------------------------------------------
 // Vérifier si l'utilisateur a déjà postulé (sauf si refusé)
 // ------------------------------------------------------------------
-router.get("/:id/detail", async (req, res) => {
+async function sendAdDetail(req, res) {
   try {
     const adId = Number(req.params.id);
     if (!Number.isInteger(adId) || adId <= 0) {
@@ -192,7 +192,9 @@ router.get("/:id/detail", async (req, res) => {
     console.error("Erreur lors du chargement du detail d'offre:", e);
     return res.status(500).json({ error: "Erreur serveur" });
   }
-});
+}
+
+router.get("/:id/detail", sendAdDetail);
 
 router.get("/:id/check-applied", async (req, res) => {
   try {
@@ -215,6 +217,8 @@ router.get("/:id/check-applied", async (req, res) => {
     return res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
+router.get("/:id", sendAdDetail);
 
 // ------------------------------------------------------------------
 // POST /api/ads/:id/apply - Soumettre une candidature

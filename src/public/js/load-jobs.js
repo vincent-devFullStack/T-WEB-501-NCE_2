@@ -18,7 +18,7 @@ async function fetchAdDetails(adId) {
   const key = Number(adId);
   if (adDetailsCache.has(key)) return adDetailsCache.get(key);
   try {
-    const r = await fetch(`/api/ads/${key}/detail`, {
+    const r = await fetch(`/api/ads/${key}`, {
       credentials: "include",
     });
     if (!r.ok) throw new Error(`fetch detail failed with ${r.status}`);

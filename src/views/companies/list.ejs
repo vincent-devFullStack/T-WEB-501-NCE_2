@@ -56,7 +56,7 @@
       <div class="companies-grid">
         <% companies.forEach((company) => { %>
           <article class="company-card">
-            <header class="company-card__header">
+            <div class="company-card__header">
               <h2><%= company.company_name %></h2>
               <span
                 class="company-card__badge <%= company.active_ads_count ? '' : 'is-empty' %>"
@@ -67,7 +67,7 @@
                   Aucune offre active
                 <% } %>
               </span>
-            </header>
+            </div>
             <% if (company.industry) { %>
               <p class="company-card__industry"><%= company.industry %></p>
             <% } %>

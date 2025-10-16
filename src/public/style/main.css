@@ -140,10 +140,10 @@ select:focus {
   border: 1px solid rgba(148, 163, 184, 0.12);
 }
 
-.job-card:hover {
+/* .job-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 25px 45px rgba(15, 23, 42, 0.18);
-}
+} */
 
 .job-card h3 {
   margin: 0 0 8px;

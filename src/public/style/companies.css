@@ -97,11 +97,14 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
+  background-color: transparent;
 }
 
 .company-card__header h2 {
   margin: 0;
   font-size: 20px;
+  background-color: transparent;
+  
 }
 
 .company-card__badge {
@@ -205,4 +208,7 @@
   .company-card__badge {
     align-self: flex-start;
   }
+}
+.h2 {
+  background-color: transparent;
 }

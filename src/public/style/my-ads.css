@@ -2,6 +2,7 @@
    MY-ADS.CSS - Page "Mes offres"
    ======================================== */
 
+
 .create-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -56,6 +57,7 @@ header {
   border: 1px solid #f5c6cb;
 }
 
+
 /* ========================================
    Alert / Message vide
    ======================================== */
@@ -77,6 +79,7 @@ header {
   margin: 0 0 1rem 0;
   font-size: 1rem;
 }
+
 
 /* ========================================
    Liste des offres
@@ -101,11 +104,13 @@ header {
   }
 }
 
+
 /* ========================================
    Carte d'offre
    ======================================== */
 
 .ad-card {
+  position: relative; /* nécessaire pour le pseudo-élément */
   background: linear-gradient(150deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 252, 0.75) 100%);
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 20px;
@@ -113,12 +118,31 @@ header {
   box-shadow: 0 22px 40px rgba(15, 23, 42, 0.12);
   transition: all 0.25s ease;
   backdrop-filter: blur(14px);
+  overflow: hidden; /* pour masquer le pseudo-élément hors des arrondis */
 }
 
+/* Barre colorée verticale masquée initialement */
+.ad-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--brand);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
+}
+
+/* Soulèvement et ombre au hover */
 .ad-card:hover {
-  box-shadow: 0 28px 48px rgba(15, 23, 42, 0.18);
-  border-color: color-mix(in srgb, var(--brand) 24%, transparent);
-  transform: translateY(-4px);
+  box-shadow: 0 26px 48px rgba(15, 23, 42, 0.2);
+  border-color: color-mix(in srgb, var(--brand) 35%, transparent);
+}
+
+/* Affichage de la barre colorée au hover */
+.ad-card:hover::before {
+  transform: scaleY(1);
 }
 
 @media (max-width: 768px) {
@@ -130,6 +154,7 @@ header {
     padding: 1.25rem;
   }
 }
+
 
 /* ========================================
    En-tête de la carte

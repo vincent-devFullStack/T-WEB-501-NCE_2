@@ -150,22 +150,20 @@ function generateApplicationForm(jobId, context = "mobile", userData = null) {
         <input type="file" id="cv-${idSuffix}" name="cv" accept=".pdf" required>
       </div>
 
+      <div class="form-group">
+        <label for="message-${idSuffix}">Message de motivation</label>
+        <textarea id="message-${idSuffix}" name="message" rows="4"
+          placeholder="Parlez-nous de vous..."></textarea>
+      </div>
+
       ${
         isDesktop
-          ? `
-        <div class="form-group">
-          <label for="message-${idSuffix}">Message de motivation</label>
-          <textarea id="message-${idSuffix}" name="message" rows="4"
-            placeholder="Parlez-nous de vous..."></textarea>
-        </div>
-        <button type="submit" class="btn btn-submit">Envoyer ma candidature</button>
-      `
+          ? `<button type="submit" class="btn btn-submit">Envoyer ma candidature</button>`
           : `
         <div class="form-actions-flip">
           <button type="button" class="btn btn-secondary btn-back-flip">← Retour</button>
           <button type="submit" class="btn btn-submit">Envoyer</button>
-        </div>
-      `
+        </div>`
       }
     </form>
   `;
@@ -231,8 +229,46 @@ async function loadJobs() {
 
   // ---------- Evénements (délégation sur le container) ----------
 
+  function restoreActions(card) {
+    if (!card) return;
+    if (card.querySelector(".job-card-actions")) return;
+    const idForButton =
+      card.dataset.id ||
+      card.querySelector("[data-id]")?.dataset?.id ||
+      card.querySelector(".js-close-details")?.dataset?.id;
+    if (!idForButton) return;
+    card.insertAdjacentHTML(
+      "beforeend",
+      `<div class="job-card-actions">
+         <button class="btn btn-details js-more" data-id="${idForButton}">En savoir plus</button>
+       </div>`
+    );
+  }
+
+  function collapseOtherDetails(exceptCard) {
+    wrap.querySelectorAll(".job-card .job-details").forEach((detail) => {
+      const parent = detail.closest(".job-card");
+      if (parent === exceptCard) return;
+      const closeBtn = detail.querySelector(".js-close-details");
+      const detailId = closeBtn?.dataset?.id;
+      detail.remove();
+      if (detailId && parent) {
+        parent.dataset.id = parent.dataset.id || detailId;
+      }
+      const wrapper = parent?.closest(".job-card-wrapper");
+      wrapper?.classList.remove("expanded");
+      restoreActions(parent);
+    });
+    wrap
+      .querySelectorAll(".job-card-wrapper.expanded")
+      .forEach((wrapper) => {
+        if (wrapper.contains(exceptCard)) return;
+        wrapper.classList.remove("expanded");
+      });
+  }
+
   // Déployer / replier les détails
-    wrap.addEventListener("click", async (e) => {
+  wrap.addEventListener("click", async (e) => {
     const moreBtn = e.target.closest("button.js-more[data-id]");
     if (!moreBtn) return;
 
@@ -246,16 +282,11 @@ async function loadJobs() {
     const existing = card.querySelector(".job-details");
     if (existing) {
       existing.remove();
-      if (!card.querySelector(".job-card-actions")) {
-        card.insertAdjacentHTML(
-          "beforeend",
-          `<div class="job-card-actions">
-             <button class="btn btn-details js-more" data-id="${id}">En savoir plus</button>
-           </div>`
-        );
-      }
+      restoreActions(card);
       return;
     }
+
+    collapseOtherDetails(card);
 
     const detail = await fetchAdDetails(id);
     if (!detail) {
@@ -274,7 +305,7 @@ async function loadJobs() {
 
     const alreadyApplied = await checkIfAlreadyApplied(id);
     const applyButtonHTML = alreadyApplied
-      ? `<button class="btn btn-apply js-apply" data-id="${id}" disabled style="background-color: #1fa435ff; transition:none; transform:none; box-shadow:none; pointer-events:none;">Deja postule</button>`
+      ? `<button class="btn btn-apply js-apply" data-id="${id}" disabled style="background-color: #1fa435ff; transition:none; transform:none; box-shadow:none; pointer-events:none;">Déjà postulé</button>`
       : `<button class="btn btn-apply js-apply" data-id="${id}">Candidature rapide</button>`;
 
     card.insertAdjacentHTML(
@@ -312,23 +343,15 @@ async function loadJobs() {
     );
   });
 
-
   // Bouton "Réduire"
   wrap.addEventListener("click", (e) => {
     const closeBtn = e.target.closest(".js-close-details");
     if (!closeBtn) return;
 
     const card = closeBtn.closest(".job-card");
-    card?.querySelector(".job-details")?.remove();
-    const id = closeBtn.dataset.id;
-    if (!card.querySelector(".job-card-actions")) {
-      card.insertAdjacentHTML(
-        "beforeend",
-        `<div class="job-card-actions">
-           <button class="btn btn-details js-more" data-id="${id}">En savoir plus</button>
-         </div>`
-      );
-    }
+    if (!card) return;
+    card.querySelector(".job-details")?.remove();
+    restoreActions(card);
   });
 
   // "Candidature rapide" -> vérifier si déjà postulé et activer le formulaire

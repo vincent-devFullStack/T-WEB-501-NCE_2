@@ -465,11 +465,14 @@
 .job-card-wrapper.expanded .job-card-front {
   opacity: 0;
   pointer-events: none;
+  position: absolute;
+  inset: 0;
 }
 
 .job-card-wrapper.expanded .job-card-back {
   opacity: 1;
   pointer-events: auto;
+  position: relative;
 }
 
 .job-card-back h3 {

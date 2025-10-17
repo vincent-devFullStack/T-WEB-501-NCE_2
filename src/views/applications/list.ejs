@@ -1,0 +1,259 @@
+<link rel="stylesheet" href="/style/applications.css" />
+
+<style>
+  /* TODO: déplacer ce bloc dans /style/applications.css */
+  .application-card__details {
+    overflow: hidden;
+    transition: grid-template-rows 200ms ease, opacity 200ms ease;
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+  .application-card__details > * {
+    min-height: 0;
+  }
+  .application-card__details[hidden] {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+  .application-card__details.is-open {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+</style>
+
+<% const isRefusedView = currentView === "refused"; %>
+
+<section class="applications-hero">
+  <div class="container">
+    <h1>Mes candidatures</h1>
+    <p>
+      <% if (isRefusedView) { %> Retrouvez les candidatures ayant reçu une
+      réponse négative. <% } else { %> Suivez l'évolution des offres auxquelles
+      vous avez postulé. <% } %>
+    </p>
+  </div>
+</section>
+
+<section class="applications-section">
+  <div class="container">
+    <% if (totalApplications === 0) { %>
+    <div class="applications-empty">
+      <h2>Vous n'avez pas encore postulé</h2>
+      <p>
+        Parcourez les offres disponibles et envoyez votre première candidature
+        pour la retrouver ici.
+      </p>
+      <a class="btn" href="/ads?">Explorer les offres</a>
+    </div>
+    <% } else { %>
+    <div class="applications-overview">
+      <div>
+        <h2>Suivi de vos candidatures</h2>
+        <% const countForView = isRefusedView ? totalRefused : totalActive; %>
+        <p>
+          <% if (isRefusedView) { %>
+          <strong><%= countForView %></strong>
+          candidature<%= countForView > 1 ? "s" : "" %> refusée<%= countForView
+          > 1 ? "s" : "" %>. <% } else { %>
+          <strong><%= countForView %></strong>
+          candidature<%= countForView > 1 ? "s" : "" %> en cours de traitement.
+          <% } %>
+        </p>
+      </div>
+      <% if (statusSummary.length) { %>
+      <div class="applications-tags">
+        <% statusSummary.forEach((item) => { %>
+        <div class="status-chip status-chip-<%= item.tone %>">
+          <span class="status-chip__label"><%= item.label %></span>
+          <span class="status-chip__count"><%= item.count %></span>
+        </div>
+        <% }); %>
+      </div>
+      <% } %>
+    </div>
+
+    <% if ((!isRefusedView && totalRefused > 0) || isRefusedView) { %>
+    <div class="applications-controls">
+      <% if (!isRefusedView && totalRefused > 0) { %>
+      <a class="btn btn-secondary" href="<%= switchToRefusedUrl %>">
+        Voir les candidatures refusées
+      </a>
+      <% } %> <% if (isRefusedView) { %>
+      <a class="btn btn-secondary" href="<%= switchToActiveUrl %>">
+        Revenir aux candidatures en cours
+      </a>
+      <% } %>
+    </div>
+    <% } %> <% if (applications.length === 0) { %>
+    <div class="applications-empty">
+      <% if (isRefusedView) { %>
+      <h2>Aucune candidature refusée pour le moment</h2>
+      <p>
+        Bonne nouvelle&nbsp;! Toutes vos candidatures sont toujours en cours.
+      </p>
+      <% } else { %>
+      <h2>Aucune candidature en cours</h2>
+      <p>
+        Toutes vos candidatures ont été traitées. Consultez les refus pour plus
+        de détails.
+      </p>
+      <% } %>
+    </div>
+    <% } else { %>
+    <div class="applications-list">
+      <% applications.forEach((app) => { %> <% const detailsId =
+      `app-details-${app.application_id}`; %>
+      <article class="application-card" data-app-id="<%= app.application_id %>">
+        <div class="application-card__row">
+          <div class="application-card__main">
+            <h3><%= app.job_title %></h3>
+            <p class="application-card__company">
+              <%= app.company_name || "Entreprise non renseignée" %> <% if
+              (app.location) { %>
+              <span class="card-separator">•</span>
+              <span><%= app.location %></span>
+              <% } %>
+            </p>
+            <p class="application-card__status-text">
+              Statut :
+              <span><%= app.status_label %></span>
+            </p>
+          </div>
+          <div class="application-card__date">
+            <span class="meta-label">Envoyée le</span>
+            <span class="meta-value"><%= app.applied_on %></span>
+          </div>
+          <div class="application-card__actions">
+            <a class="btn btn-outline" href="/ads/<%= app.ad_id %>"
+              >Voir l'offre</a
+            >
+            <% if (app.has_details) { %>
+            <button
+              type="button"
+              class="btn btn-ghost js-toggle-details"
+              data-toggle-details="<%= detailsId %>"
+              aria-controls="<%= detailsId %>"
+              aria-expanded="false"
+            >
+              Voir plus
+            </button>
+            <% } %>
+          </div>
+        </div>
+
+        <% if (app.has_details) { %>
+        <div class="application-card__details" id="<%= detailsId %>" hidden>
+          <dl class="application-card__details-grid">
+            <% if (app.updated_on && app.updated_on !== app.applied_on) { %>
+            <div>
+              <dt>Dernière mise à jour</dt>
+              <dd><%= app.updated_on %></dd>
+            </div>
+            <% } %> <% if (app.salary_label) { %>
+            <div>
+              <dt>Salaire indicatif</dt>
+              <dd><%= app.salary_label %></dd>
+            </div>
+            <% } %> <% if (app.contract_label || app.contract_type) { %>
+            <div>
+              <dt>Contrat</dt>
+              <dd><%= app.contract_label || app.contract_type %></dd>
+            </div>
+            <% } %> <% if (app.deadline_label) { %>
+            <div>
+              <dt>Date limite</dt>
+              <dd><%= app.deadline_label %></dd>
+            </div>
+            <% } %>
+          </dl>
+
+          <% if (app.status_description) { %>
+          <p class="application-card__hint"><%= app.status_description %></p>
+          <% } %> <% if (app.cover_letter) { %>
+          <div class="application-card__message">
+            <h4>Message envoyé</h4>
+            <p><%= app.cover_letter %></p>
+          </div>
+          <% } %>
+        </div>
+        <% } %>
+      </article>
+      <% }); %>
+    </div>
+
+    <% if (totalPages > 1) { %>
+    <div class="applications-pagination">
+      <% if (hasPreviousPage) { %>
+      <a class="btn btn-secondary" href="<%= previousPageUrl %>">Précédentes</a>
+      <% } else { %>
+      <button class="btn btn-secondary" type="button" disabled>
+        Précédentes
+      </button>
+      <% } %>
+      <span class="applications-pagination__info">
+        Page <%= currentPage %> / <%= totalPages %>
+      </span>
+      <% if (hasNextPage) { %>
+      <a class="btn" href="<%= nextPageUrl %>">Suivantes</a>
+      <% } else { %>
+      <button class="btn" type="button" disabled>Suivantes</button>
+      <% } %>
+    </div>
+    <% } %> <% } %> <% } %>
+  </div>
+</section>
+
+<script>
+  (function () {
+    const list = document.querySelector(".applications-list");
+    if (!list) return;
+
+    // À l'init : marquer toutes les cartes qui ont leurs détails cachés comme "is-collapsed"
+    list.querySelectorAll(".application-card").forEach((card) => {
+      const panel = card.querySelector(".application-card__details");
+      if (panel && panel.hasAttribute("hidden")) {
+        card.classList.add("is-collapsed");
+      }
+    });
+
+    list.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-toggle-details]");
+      if (!btn) return;
+
+      const id = btn.getAttribute("data-toggle-details");
+      const panel = document.getElementById(id);
+      if (!panel) return;
+
+      const card = btn.closest(".application-card");
+      const isOpen =
+        panel.classList.contains("is-open") && !panel.hasAttribute("hidden");
+
+      if (isOpen) {
+        // --- fermeture -> repasse en compact ---
+        panel.classList.remove("is-open");
+        panel.addEventListener(
+          "transitionend",
+          function onEnd() {
+            panel.setAttribute("hidden", "");
+            panel.removeEventListener("transitionend", onEnd);
+          },
+          { once: true }
+        );
+
+        btn.textContent = "Voir plus";
+        btn.setAttribute("aria-expanded", "false");
+        card?.classList.add("is-collapsed");
+      } else {
+        // --- ouverture -> état étendu ---
+        panel.removeAttribute("hidden");
+        requestAnimationFrame(() => panel.classList.add("is-open"));
+
+        btn.textContent = "Masquer";
+        btn.setAttribute("aria-expanded", "true");
+        card?.classList.remove("is-collapsed");
+      }
+    });
+  })();
+</script>

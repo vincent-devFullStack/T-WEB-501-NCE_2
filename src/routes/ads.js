@@ -15,13 +15,37 @@ r.get("/", async (req, res) => {
   try {
     const companyIdParam = req.query.company_id;
     const companyId = companyIdParam ? Number.parseInt(companyIdParam, 10) : null;
-    const advertisements = await Ad.listPublicActive({
-      companyId: Number.isInteger(companyId) && companyId > 0 ? companyId : null,
+    const PAGE_SIZE = 9;
+    const pageParam = Number.parseInt(req.query.page, 10);
+    let currentPage = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+
+    const finalCompanyId = Number.isInteger(companyId) && companyId > 0 ? companyId : null;
+
+    let { items: advertisements = [], total } = await Ad.listPublicActive({
+      companyId: finalCompanyId,
+      limit: PAGE_SIZE,
+      offset: (currentPage - 1) * PAGE_SIZE,
     });
+    total = Number.isFinite(total) ? total : 0;
+
+    const totalPages = Math.max(1, Math.ceil((total || 0) / PAGE_SIZE));
+    if (total > 0 && currentPage > totalPages) {
+      currentPage = totalPages;
+      ({ items: advertisements = [] } = await Ad.listPublicActive({
+        companyId: finalCompanyId,
+        limit: PAGE_SIZE,
+        offset: (currentPage - 1) * PAGE_SIZE,
+      }));
+    }
+
+    const params = new URLSearchParams(req.query);
+    params.delete("page");
+    const baseQuery = params.toString();
+    const queryPrefix = baseQuery ? `${baseQuery}&` : "";
 
     let companyInfo = null;
-    if (Number.isInteger(companyId) && companyId > 0) {
-      companyInfo = await Company.findById(companyId);
+    if (finalCompanyId) {
+      companyInfo = await Company.findById(finalCompanyId);
     }
 
     return res.render("ads/list", {
@@ -30,6 +54,15 @@ r.get("/", async (req, res) => {
         : "Toutes les offres",
       offres: advertisements,
       companyFilter: companyInfo,
+      pagination: {
+        currentPage,
+        totalPages,
+        hasPrevious: currentPage > 1,
+        hasNext: currentPage < totalPages,
+        previousPage: currentPage - 1,
+        nextPage: currentPage + 1,
+        queryPrefix,
+      },
     });
   } catch (e) {
     console.error(e);

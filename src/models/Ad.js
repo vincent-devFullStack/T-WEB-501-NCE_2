@@ -148,14 +148,22 @@ export const Ad = {
     return r.affectedRows > 0;
   },
 
-  async listPublicActive({ companyId = null } = {}) {
+  async listPublicActive({
+    companyId = null,
+    limit = null,
+    offset = 0,
+    withTotal = false,
+  } = {}) {
     const where = ["a.status = 'active'"];
     const params = [];
     if (companyId) {
       where.push("a.company_id = ?");
       params.push(companyId);
     }
-    const sql = `
+
+    const whereClause = where.length ? "WHERE " + where.join(" AND ") : "";
+
+    const selectSql = `
       SELECT
         a.ad_id,
         a.company_id,
@@ -170,11 +178,49 @@ export const Ad = {
         c.company_name
       FROM advertisements a
       LEFT JOIN companies c ON a.company_id = c.company_id
-      ${where.length ? "WHERE " + where.join(" AND ") : ""}
+      ${whereClause}
       ORDER BY a.created_at DESC
+      ${limit != null ? "LIMIT ? OFFSET ?" : ""}
     `;
-    const [rows] = await pool.query(sql, params);
-    return rows;
+
+    const dataParams =
+      limit != null ? [...params, Number(limit), Number(offset)] : params;
+    const [rows] = await pool.query(selectSql, dataParams);
+
+    if (limit == null && !withTotal) {
+      return rows;
+    }
+
+    const countWhere = ["status = 'active'"];
+    const countParams = [];
+    if (companyId) {
+      countWhere.push("company_id = ?");
+      countParams.push(companyId);
+    }
+    const countSql = `
+      SELECT COUNT(*) AS total
+      FROM advertisements
+      ${countWhere.length ? "WHERE " + countWhere.join(" AND ") : ""}
+    `;
+    const [[{ total }]] = await pool.query(countSql, countParams);
+
+    return { items: rows, total: Number(total) || 0 };
+  },
+
+  async countPublicActive({ companyId = null } = {}) {
+    const where = ["status = 'active'"];
+    const params = [];
+    if (companyId) {
+      where.push("company_id = ?");
+      params.push(companyId);
+    }
+    const sql = `
+      SELECT COUNT(*) AS total
+      FROM advertisements
+      ${where.length ? "WHERE " + where.join(" AND ") : ""}
+    `;
+    const [[{ total }]] = await pool.query(sql, params);
+    return Number(total) || 0;
   },
 
   async listPublicWithRelations() {

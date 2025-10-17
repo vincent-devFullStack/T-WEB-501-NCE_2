@@ -9,6 +9,39 @@ if (!jobsList) {
 }
 const adDetailsCache = new Map();
 
+function restoreActions(card, id) {
+  if (!card) return;
+  if (card.querySelector('.job-card-actions')) return;
+  card.insertAdjacentHTML(
+    'beforeend',
+    `<div class="job-card-actions">
+      <button class="btn btn-details js-more" data-id="${id}">En savoir plus</button>
+    </div>`
+  );
+}
+
+function collapseOtherCards(exceptCard) {
+  jobsList
+    ?.querySelectorAll('.job-card-front .job-details')
+    .forEach((detail) => {
+      const card = detail.closest('.job-card-front');
+      if (!card || card === exceptCard) return;
+      const id = detail.querySelector('.js-close-details')?.dataset?.id;
+      detail.remove();
+      if (id) {
+        restoreActions(card, id);
+      }
+    });
+
+  // fermer les panneaux de formulaire ouverts
+  jobsList
+    ?.querySelectorAll('.job-card-wrapper.expanded')
+    .forEach((wrapper) => {
+      if (exceptCard && wrapper.contains(exceptCard)) return;
+      wrapper.classList.remove('expanded');
+    });
+}
+
 // ==============================
 // BOUTON "EN SAVOIR PLUS"
 // ==============================
@@ -35,6 +68,8 @@ jobsList?.addEventListener('click', async (e) => {
     console.log('✅ Détails fermés');
     return;
   }
+
+  collapseOtherCards(card);
 
   // Ouvrir les détails
   console.log('🔄 Chargement des détails pour l\'offre', id);

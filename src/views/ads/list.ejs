@@ -82,7 +82,7 @@
     </div>
   <% } %>
     
-    <% if (offres.length === 0) { %>
+  <% if (offres.length === 0) { %>
       <p class="error">Aucune offre disponible pour le moment.</p>
     <% } else { %>
       <div class="jobs-grid" id="jobs-list">
@@ -160,6 +160,26 @@
           </div>
         <% }); %>
       </div>
+      <% if (pagination && pagination.totalPages > 1) { %>
+        <nav class="ads-pagination">
+          <span class="ads-pagination__info">
+            Page <%= pagination.currentPage %> / <%= pagination.totalPages %>
+          </span>
+          <div class="ads-pagination__actions">
+            <% if (pagination.hasPrevious) { %>
+              <a class="btn btn-secondary" href="?<%= pagination.queryPrefix %>page=<%= pagination.previousPage %>">← Précédent</a>
+            <% } else { %>
+              <span class="btn btn-secondary disabled" aria-disabled="true">← Précédent</span>
+            <% } %>
+
+            <% if (pagination.hasNext) { %>
+              <a class="btn" href="?<%= pagination.queryPrefix %>page=<%= pagination.nextPage %>">Suivant →</a>
+            <% } else { %>
+              <span class="btn disabled" aria-disabled="true">Suivant →</span>
+            <% } %>
+          </div>
+        </nav>
+      <% } %>
     <% } %>
   </main>
 

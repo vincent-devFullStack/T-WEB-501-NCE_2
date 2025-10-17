@@ -259,12 +259,10 @@ async function loadJobs() {
       wrapper?.classList.remove("expanded");
       restoreActions(parent);
     });
-    wrap
-      .querySelectorAll(".job-card-wrapper.expanded")
-      .forEach((wrapper) => {
-        if (wrapper.contains(exceptCard)) return;
-        wrapper.classList.remove("expanded");
-      });
+    wrap.querySelectorAll(".job-card-wrapper.expanded").forEach((wrapper) => {
+      if (wrapper.contains(exceptCard)) return;
+      wrapper.classList.remove("expanded");
+    });
   }
 
   // Déployer / replier les détails
@@ -336,7 +334,7 @@ async function loadJobs() {
     }
     <div class="job-details-actions">
       ${applyButtonHTML}
-      <button class="btn btn-secondary js-close-details" data-id="${id}">Reduire</button>
+      <button class="btn btn-secondary js-close-details" data-id="${id}">Réduire</button>
     </div>
   </div>
   `

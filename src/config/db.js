@@ -5,7 +5,7 @@ dotenv.config();
 function required(name) {
   const v = process.env[name];
   if (!v) throw new Error(`[DB] Missing env var: ${name}`);
-  return v;
+  return typeof v === "string" ? v.trim() : v;
 }
 
 const isProd = process.env.NODE_ENV === "production";

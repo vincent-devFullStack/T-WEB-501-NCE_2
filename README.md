@@ -105,4 +105,4 @@ Pour toute contribution, suivez le style de code existant (ESM + async/await) et
 
 ## 6. Lien démo
 
-Démo Vercel: https://t-web-501-nce-2-mqe14h21u-vincent-silvestris-projects.vercel.app/
+Démo Vercel: https://t-web-501-nce-2.vercel.app/

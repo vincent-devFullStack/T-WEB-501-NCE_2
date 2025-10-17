@@ -64,6 +64,13 @@ app.use(
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Favicon (fallback sur le logo PNG si aucun .ico dédié)
+app.get("/favicon.ico", (_req, res) => {
+  res.type("image/png");
+  res.sendFile(path.join(__dirname, "public", "images", "logo.png"));
+});
+
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 

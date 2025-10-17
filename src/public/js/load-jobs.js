@@ -6,7 +6,32 @@ const state = {
   page: 1,
   totalPages: 1,
   total: 0,
+  currentUser: null,
+  prefill: null,
 };
+
+async function fetchCurrentUser() {
+  try {
+    const r = await fetch("/api/auth/me", { credentials: "include" });
+    if (!r.ok) throw new Error(await r.text());
+    const data = await r.json();
+    return data?.user ?? null;
+  } catch (e) {
+    console.warn("fetchCurrentUser error", e);
+    return null;
+  }
+}
+
+function normalizeUserForForm(user) {
+  if (!user) return null;
+  const nameParts = [user.first_name, user.last_name].filter(Boolean);
+  const fallbackName = nameParts.join(" ") || user.name || "";
+  return {
+    name: fallbackName,
+    email: user.email || "",
+    phone: user.phone || "",
+  };
+}
 
 async function fetchAds(page = 1) {
   try {
@@ -47,6 +72,27 @@ async function fetchAds(page = 1) {
 const adDetailsCache = new Map();
 const jobsList = document.getElementById("jobs-list");
 const paginationContainer = document.getElementById("jobs-pagination");
+const mainFieldset = document.getElementById("apply-fieldset");
+const mainNameInput = document.getElementById("apply-name");
+const mainEmailInput = document.getElementById("apply-email");
+const mainPhoneInput = document.getElementById("apply-phone");
+
+function applyPrefillToMainForm() {
+  if (!state.prefill) return;
+  if (mainFieldset && mainFieldset.disabled) {
+    // conserver le verrouillage tant que l'utilisateur n'a pas cliqué sur "Candidature rapide"
+    mainFieldset.disabled = true;
+  }
+  if (mainNameInput && state.prefill.name) {
+    mainNameInput.value = state.prefill.name;
+  }
+  if (mainEmailInput && state.prefill.email) {
+    mainEmailInput.value = state.prefill.email;
+  }
+  if (mainPhoneInput && state.prefill.phone) {
+    mainPhoneInput.value = state.prefill.phone;
+  }
+}
 
 async function fetchAdDetails(adId) {
   const key = Number(adId);
@@ -84,12 +130,15 @@ async function checkIfAlreadyApplied(adId) {
 
 // Fonction pour activer le formulaire et afficher les infos de l'offre
 function enableApplicationForm(adId, ad, alreadyApplied = false) {
-  const fieldset = document.getElementById("apply-fieldset");
+  const fieldset = mainFieldset || document.getElementById("apply-fieldset");
   const submitBtn = document.getElementById("apply-submit-btn");
   const adIdInput = document.getElementById("apply-ad-id");
   const jobInfo = document.getElementById("apply-job-info");
   const jobTitle = document.getElementById("apply-job-title");
   const companyName = document.getElementById("apply-company-name");
+  const nameInput = mainNameInput || document.getElementById("apply-name");
+  const emailInput = mainEmailInput || document.getElementById("apply-email");
+  const phoneInput = mainPhoneInput || document.getElementById("apply-phone");
 
   if (adIdInput) adIdInput.value = adId;
 
@@ -114,6 +163,17 @@ function enableApplicationForm(adId, ad, alreadyApplied = false) {
       if (submitBtn) {
         submitBtn.textContent = "Envoyer la candidature";
         submitBtn.style.backgroundColor = "";
+      }
+      if (state.prefill) {
+        if (nameInput && !nameInput.value && state.prefill.name) {
+          nameInput.value = state.prefill.name;
+        }
+        if (emailInput && !emailInput.value && state.prefill.email) {
+          emailInput.value = state.prefill.email;
+        }
+        if (phoneInput && !phoneInput.value && state.prefill.phone) {
+          phoneInput.value = state.prefill.phone;
+        }
       }
     }
   }
@@ -233,7 +293,7 @@ function adCard(a) {
         <!-- VERSO (mobile) -->
         <div class="job-card job-card-back">
           <h3>Candidature rapide</h3>
-          ${generateApplicationForm(a.ad_id, "mobile", null)}
+          ${generateApplicationForm(a.ad_id, "mobile", state.prefill)}
         </div>
       </div>
     </div>
@@ -334,16 +394,6 @@ async function loadJobs(page = 1) {
   renderJobs(state.ads);
   renderPagination();
 
-  const sidebar =
-    document.getElementById("sidebar-form-container") ||
-    document.querySelector(".sidebar-form");
-  if (sidebar && !sidebar.dataset.initialized) {
-    sidebar.innerHTML = `
-      <h3 style="margin-top:0">Candidature rapide</h3>
-      ${generateApplicationForm("general", "desktop", null)}
-    `;
-    sidebar.dataset.initialized = "true";
-  }
 }
 
 jobsList?.addEventListener("click", async (e) => {
@@ -470,5 +520,12 @@ paginationContainer?.addEventListener("click", (e) => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
+async function initPage() {
+  state.currentUser = await fetchCurrentUser();
+  state.prefill = normalizeUserForForm(state.currentUser);
+  applyPrefillToMainForm();
+  await loadJobs();
+}
+
 // Go!
-loadJobs();
+initPage();

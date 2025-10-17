@@ -1,28 +1,5 @@
 <link rel="stylesheet" href="/style/applications.css" />
 
-<style>
-  /* TODO: déplacer ce bloc dans /style/applications.css */
-  .application-card__details {
-    overflow: hidden;
-    transition: grid-template-rows 200ms ease, opacity 200ms ease;
-    display: grid;
-    grid-template-rows: 0fr;
-    opacity: 0;
-  }
-  .application-card__details > * {
-    min-height: 0;
-  }
-  .application-card__details[hidden] {
-    display: grid;
-    grid-template-rows: 0fr;
-    opacity: 0;
-  }
-  .application-card__details.is-open {
-    grid-template-rows: 1fr;
-    opacity: 1;
-  }
-</style>
-
 <% const isRefusedView = currentView === "refused"; %>
 
 <section class="applications-hero">
@@ -126,10 +103,8 @@
             <span class="meta-value"><%= app.applied_on %></span>
           </div>
           <div class="application-card__actions">
-            <a class="btn btn-outline" href="/ads/<%= app.ad_id %>"
-              >Voir l'offre</a
-            >
-            <% if (app.has_details) { %>
+            <% /* SUPPRIMÉ : lien "Voir l'offre" */ %> <% if (app.has_details) {
+            %>
             <button
               type="button"
               class="btn btn-ghost js-toggle-details"

@@ -1,5 +1,5 @@
 // src/middleware/auth.js
-import jwt from "jsonwebtoken";
+import { verifyJwt } from "../services/authTokens.js";
 
 /** Vrai si la requête est une API (JSON) */
 function isApi(req) {
@@ -14,7 +14,7 @@ export function attachUserIfAny(req, _res, next) {
   const token = req.cookies?.token;
   if (token) {
     try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET);
+      const payload = verifyJwt(token);
       req.user = { id: payload.id, role: payload.role };
     } catch {
       // token invalide/expiré -> on ignore

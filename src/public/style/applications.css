@@ -3,6 +3,26 @@
   padding: 56px 0;
 }
 
+.application-card__details {
+  overflow: hidden;
+  transition: grid-template-rows 200ms ease, opacity 200ms ease;
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+.application-card__details > * {
+  min-height: 0;
+}
+.application-card__details[hidden] {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+.application-card__details.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
 .applications-hero .container {
   display: grid;
   gap: 12px;

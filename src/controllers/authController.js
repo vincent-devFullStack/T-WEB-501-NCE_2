@@ -1,6 +1,9 @@
 import { User } from "../models/User.js";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import {
+  setAuthCookie,
+  clearAuthCookie,
+} from "../services/authTokens.js";
 
 /* ---------- Service commun ---------- */
 async function getUserByEmail(email) {
@@ -8,15 +11,7 @@ async function getUserByEmail(email) {
 }
 
 function signAuthCookie(res, payload) {
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES,
-  });
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 1000 * 60 * 60 * 24, // 1 jour
-  });
+  return setAuthCookie(res, payload);
 }
 
 /* ---------- API JSON (pour navbar.js) ---------- */
@@ -43,7 +38,7 @@ export async function apiLogin(req, res) {
 }
 
 export async function apiLogout(_req, res) {
-  res.clearCookie("token");
+  clearAuthCookie(res);
   return res.json({ message: "Deconnecte" });
 }
 
@@ -193,6 +188,6 @@ export async function pageSignupPost(req, res) {
 }
 
 export function pageLogout(_req, res) {
-  res.clearCookie("token");
+  clearAuthCookie(res);
   return res.redirect("/");
 }

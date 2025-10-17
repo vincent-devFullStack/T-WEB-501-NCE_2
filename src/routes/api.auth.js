@@ -1,30 +1,10 @@
 // src/routes/api.auth.js
 import { Router } from "express";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import { pool } from "../config/db.js";
+import { setAuthCookie, clearAuthCookie } from "../services/authTokens.js";
 
 const r = Router();
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
-const isProd = process.env.NODE_ENV === "production";
-
-function issueToken(res, payload) {
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
-  res.cookie("token", token, {
-    httpOnly: true,
-    sameSite: isProd ? "none" : "lax",
-    secure: isProd,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
-  return token;
-}
-function clearToken(res) {
-  res.clearCookie("token", {
-    httpOnly: true,
-    sameSite: isProd ? "none" : "lax",
-    secure: isProd,
-  });
-}
 
 // ---------- /api/auth/me ----------
 r.get("/me", async (req, res) => {
@@ -135,7 +115,7 @@ r.post("/register", async (req, res) => {
     );
 
     const userId = result.insertId;
-    issueToken(res, { id: userId, role: person_type });
+    setAuthCookie(res, { id: userId, role: person_type });
 
     return res.status(201).json({
       ok: true,
@@ -180,7 +160,7 @@ r.post("/login", async (req, res) => {
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) return res.status(401).json({ error: "Identifiants invalides." });
 
-    issueToken(res, { id: user.person_id, role: user.role });
+    setAuthCookie(res, { id: user.person_id, role: user.role });
 
     return res.json({
       ok: true,
@@ -199,7 +179,7 @@ r.post("/login", async (req, res) => {
 
 // ---------- /api/auth/logout ----------
 r.post("/logout", async (_req, res) => {
-  clearToken(res);
+  clearAuthCookie(res);
   return res.json({ ok: true });
 });
 

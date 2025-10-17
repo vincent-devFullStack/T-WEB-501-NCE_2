@@ -81,6 +81,20 @@
   gap: 20px;
 }
 
+.companies-pagination {
+  margin-top: 24px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.companies-pagination__info {
+  font-weight: 600;
+  color: var(--muted);
+}
+
 .company-card {
   background: var(--card);
   border-radius: var(--radius);

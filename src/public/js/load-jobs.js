@@ -1,18 +1,52 @@
 // /public/js/load-jobs.js
 
-async function fetchAds() {
+const PAGE_SIZE = 10;
+const state = {
+  ads: [],
+  page: 1,
+  totalPages: 1,
+  total: 0,
+};
+
+async function fetchAds(page = 1) {
   try {
-    const r = await fetch("/api/ads", { credentials: "include" });
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(PAGE_SIZE),
+    });
+    const r = await fetch(`/api/ads?${params.toString()}`, {
+      credentials: "include",
+    });
     if (!r.ok) throw new Error(await r.text());
     const data = await r.json();
-    return Array.isArray(data) ? data : data.ads || [];
+    const ads = Array.isArray(data) ? data : data.ads || [];
+    const pagination = data?.pagination || {};
+    return {
+      ads,
+      pagination: {
+        page: pagination.page ?? page,
+        totalPages: pagination.totalPages ?? 1,
+        total: pagination.total ?? ads.length,
+        limit: pagination.limit ?? PAGE_SIZE,
+      },
+    };
   } catch (e) {
     console.error("fetchAds error:", e);
-    return [];
+    return {
+      ads: [],
+      pagination: {
+        page: page,
+        totalPages: 1,
+        total: 0,
+        limit: PAGE_SIZE,
+      },
+    };
   }
 }
 
 const adDetailsCache = new Map();
+const jobsList = document.getElementById("jobs-list");
+const paginationContainer = document.getElementById("jobs-pagination");
 
 async function fetchAdDetails(adId) {
   const key = Number(adId);
@@ -206,72 +240,118 @@ function adCard(a) {
   `;
 }
 
-// ---- Main loader --------------------------------------------
-async function loadJobs() {
-  const wrap = document.getElementById("jobs-list");
-  if (!wrap) return;
+function restoreActions(card, id) {
+  if (!card) return;
+  if (card.querySelector(".job-card-actions")) return;
+  const idForButton =
+    id ||
+    card.dataset.id ||
+    card.querySelector("[data-id]")?.dataset?.id ||
+    card.querySelector(".js-close-details")?.dataset?.id;
+  if (!idForButton) return;
+  card.insertAdjacentHTML(
+    "beforeend",
+    `<div class="job-card-actions">
+       <button class="btn btn-details js-more" data-id="${idForButton}">En savoir plus</button>
+     </div>`
+  );
+}
 
-  const ads = await fetchAds();
-  if (!ads?.length) {
-    wrap.innerHTML = `<p class="error">Aucune offre à afficher.</p>`;
+function collapseOtherDetails(exceptCard) {
+  if (!jobsList) return;
+  jobsList.querySelectorAll(".job-card .job-details").forEach((detail) => {
+    const parent = detail.closest(".job-card");
+    if (!parent || parent === exceptCard) return;
+    const closeBtn = detail.querySelector(".js-close-details");
+    const detailId = closeBtn?.dataset?.id;
+    detail.remove();
+    const wrapper = parent.closest(".job-card-wrapper");
+    wrapper?.classList.remove("expanded");
+    restoreActions(parent, detailId);
+  });
+  jobsList
+    .querySelectorAll(".job-card-wrapper.expanded")
+    .forEach((wrapper) => {
+      if (exceptCard && wrapper.contains(exceptCard)) return;
+      wrapper.classList.remove("expanded");
+    });
+}
+
+function renderJobs(ads) {
+  if (!jobsList) return;
+  if (!ads || !ads.length) {
+    jobsList.innerHTML = `<p class="error">Aucune offre à afficher.</p>`;
     return;
   }
-  wrap.innerHTML = ads.map(adCard).join("");
+  jobsList.innerHTML = ads.map(adCard).join("");
+}
 
-  // Sidebar form (desktop)
-  const sidebar = document.getElementById("sidebar-form-container");
-  if (sidebar) {
+function renderPagination() {
+  if (!paginationContainer) return;
+  if (state.totalPages <= 1 || state.total === 0) {
+    paginationContainer.innerHTML = "";
+    paginationContainer.style.display = "none";
+    return;
+  }
+
+  paginationContainer.style.display = "flex";
+  const prevDisabled = state.page <= 1;
+  const nextDisabled = state.page >= state.totalPages;
+  paginationContainer.innerHTML = `
+    <span class="jobs-pagination__info">
+      Page ${state.page} / ${state.totalPages}
+    </span>
+    <div class="jobs-pagination__actions">
+      <button type="button" class="btn btn-secondary" data-page="${state.page - 1}" ${
+        prevDisabled ? "disabled" : ""
+      }>← Précédent</button>
+      <button type="button" class="btn" data-page="${state.page + 1}" ${
+        nextDisabled ? "disabled" : ""
+      }>Suivant →</button>
+    </div>
+  `;
+}
+
+// ---- Main loader --------------------------------------------
+async function loadJobs(page = 1) {
+  if (!jobsList) return;
+
+  const { ads, pagination } = await fetchAds(page);
+  state.ads = Array.isArray(ads) ? ads : [];
+  state.page = Number.isFinite(pagination.page) ? pagination.page : page;
+  state.totalPages = Number.isFinite(pagination.totalPages)
+    ? pagination.totalPages
+    : 1;
+  state.total = Number.isFinite(pagination.total)
+    ? pagination.total
+    : state.ads.length;
+
+  if (state.total > 0 && state.page > state.totalPages) {
+    loadJobs(state.totalPages);
+    return;
+  }
+
+  renderJobs(state.ads);
+  renderPagination();
+
+  const sidebar =
+    document.getElementById("sidebar-form-container") ||
+    document.querySelector(".sidebar-form");
+  if (sidebar && !sidebar.dataset.initialized) {
     sidebar.innerHTML = `
       <h3 style="margin-top:0">Candidature rapide</h3>
       ${generateApplicationForm("general", "desktop", null)}
     `;
+    sidebar.dataset.initialized = "true";
   }
+}
 
-  // ---------- Evénements (délégation sur le container) ----------
-
-  function restoreActions(card) {
-    if (!card) return;
-    if (card.querySelector(".job-card-actions")) return;
-    const idForButton =
-      card.dataset.id ||
-      card.querySelector("[data-id]")?.dataset?.id ||
-      card.querySelector(".js-close-details")?.dataset?.id;
-    if (!idForButton) return;
-    card.insertAdjacentHTML(
-      "beforeend",
-      `<div class="job-card-actions">
-         <button class="btn btn-details js-more" data-id="${idForButton}">En savoir plus</button>
-       </div>`
-    );
-  }
-
-  function collapseOtherDetails(exceptCard) {
-    wrap.querySelectorAll(".job-card .job-details").forEach((detail) => {
-      const parent = detail.closest(".job-card");
-      if (parent === exceptCard) return;
-      const closeBtn = detail.querySelector(".js-close-details");
-      const detailId = closeBtn?.dataset?.id;
-      detail.remove();
-      if (detailId && parent) {
-        parent.dataset.id = parent.dataset.id || detailId;
-      }
-      const wrapper = parent?.closest(".job-card-wrapper");
-      wrapper?.classList.remove("expanded");
-      restoreActions(parent);
-    });
-    wrap.querySelectorAll(".job-card-wrapper.expanded").forEach((wrapper) => {
-      if (wrapper.contains(exceptCard)) return;
-      wrapper.classList.remove("expanded");
-    });
-  }
-
-  // Déployer / replier les détails
-  wrap.addEventListener("click", async (e) => {
-    const moreBtn = e.target.closest("button.js-more[data-id]");
-    if (!moreBtn) return;
-
+jobsList?.addEventListener("click", async (e) => {
+  const moreBtn = e.target.closest("button.js-more[data-id]");
+  if (moreBtn) {
     const id = Number(moreBtn.dataset.id);
-    const summary = ads.find((x) => x.ad_id === id);
+    if (!Number.isFinite(id)) return;
+    const summary = state.ads.find((x) => Number(x.ad_id) === id);
     if (!summary) return;
 
     const card = moreBtn.closest(".job-card");
@@ -280,7 +360,7 @@ async function loadJobs() {
     const existing = card.querySelector(".job-details");
     if (existing) {
       existing.remove();
-      restoreActions(card);
+      restoreActions(card, id);
       return;
     }
 
@@ -339,38 +419,26 @@ async function loadJobs() {
   </div>
   `
     );
-  });
+    return;
+  }
 
-  // Bouton "Réduire"
-  wrap.addEventListener("click", (e) => {
-    const closeBtn = e.target.closest(".js-close-details");
-    if (!closeBtn) return;
-
+  const closeBtn = e.target.closest(".js-close-details");
+  if (closeBtn) {
+    const id = Number(closeBtn.dataset.id);
     const card = closeBtn.closest(".job-card");
     if (!card) return;
     card.querySelector(".job-details")?.remove();
-    restoreActions(card);
-  });
+    restoreActions(card, id);
+    return;
+  }
 
-  // "Candidature rapide" -> vérifier si déjà postulé et activer le formulaire
-  wrap.addEventListener("click", async (e) => {
-    const applyBtn = e.target.closest("button.js-apply[data-id]");
-    if (!applyBtn) return;
-
+  const applyBtn = e.target.closest("button.js-apply[data-id]");
+  if (applyBtn) {
     const id = Number(applyBtn.dataset.id);
+    if (!Number.isFinite(id) || applyBtn.disabled) return;
 
-    // Si le bouton est déjà désactivé (déjà postulé), ne rien faire
-    if (applyBtn.disabled) {
-      return;
-    }
-
-    // Trouver l'annonce correspondante
-    const ad = ads.find((x) => x.ad_id === id);
-
-    // Vérifier si déjà postulé
+    const ad = state.ads.find((x) => Number(x.ad_id) === id);
     const alreadyApplied = await checkIfAlreadyApplied(id);
-
-    // Activer le formulaire avec les infos de l'offre
     enableApplicationForm(id, ad, alreadyApplied);
 
     if (window.innerWidth >= 1025) {
@@ -383,15 +451,24 @@ async function loadJobs() {
       `.job-card-wrapper[data-id="${id}"]`
     );
     if (wrapper) wrapper.classList.add("expanded");
-  });
+    return;
+  }
 
-  // Bouton retour du flip mobile
-  wrap.addEventListener("click", (e) => {
-    const backBtn = e.target.closest("button.btn-back-flip");
-    if (!backBtn) return;
+  const backBtn = e.target.closest("button.btn-back-flip");
+  if (backBtn) {
     backBtn.closest(".job-card-wrapper")?.classList.remove("expanded");
-  });
-}
+  }
+});
+
+paginationContainer?.addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-page]");
+  if (!btn || btn.disabled) return;
+  const targetPage = Number(btn.dataset.page);
+  if (!Number.isFinite(targetPage)) return;
+  if (targetPage < 1 || targetPage > state.totalPages) return;
+  loadJobs(targetPage);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
 
 // Go!
 loadJobs();

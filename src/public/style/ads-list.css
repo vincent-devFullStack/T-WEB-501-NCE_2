@@ -31,7 +31,11 @@
   gap: 18px;
   padding: 18px 24px;
   margin-bottom: 24px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--brand) 12%, transparent) 0%, color-mix(in srgb, var(--brand) 4%, white) 100%);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--brand) 12%, transparent) 0%,
+    color-mix(in srgb, var(--brand) 4%, white) 100%
+  );
   border-radius: 18px;
   border: 1px solid color-mix(in srgb, var(--brand) 22%, transparent);
   box-shadow: 0 15px 35px rgba(15, 23, 42, 0.12);
@@ -78,24 +82,28 @@
 .job-card {
   position: relative;
   width: 100%;
-  
+
   /* Transition pour le fade */
   opacity: 1;
   visibility: visible;
   transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.2s ease;
-  
+
   /* Styles visuels */
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 252, 0.6) 100%);
-  border-radius: 22px; 
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(248, 250, 252, 0.6) 100%
+  );
+  border-radius: 22px;
   box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
   padding: 26px;
   backdrop-filter: blur(16px);
   border: 1px solid rgba(148, 163, 184, 0.18);
-  
+
   /* Flexbox pour organiser le contenu */
   display: flex;
   flex-direction: column;
-  
+
   /* CRITIQUE : overflow hidden pour respecter les arrondis */
   overflow: hidden;
 }
@@ -435,9 +443,9 @@
     justify-content: center;
   }
 
-.form-group {
-  gap: 10px;
-}
+  .form-group {
+    gap: 10px;
+  }
 }
 
 .ads-pagination {

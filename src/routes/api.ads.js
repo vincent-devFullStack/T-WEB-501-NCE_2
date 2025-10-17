@@ -27,10 +27,33 @@ const upload = multer({
 // ------------------------------------------------------------------
 // GET /api/ads  -> liste des annonces actives (publique)
 // ------------------------------------------------------------------
-router.get("/", async (_req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const ads = await Ad.listPublicActive();
-    res.json({ ads });
+    const limitParam = Number.parseInt(req.query.limit, 10);
+    const pageParam = Number.parseInt(req.query.page, 10);
+    const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 50) : 10;
+    const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+    const offset = (page - 1) * limit;
+
+    const { items = [], total = 0 } = await Ad.listPublicActive({
+      limit,
+      offset,
+      withTotal: true,
+    });
+
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+
+    res.json({
+      ads: items,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasPrevious: page > 1,
+        hasNext: page < totalPages,
+      },
+    });
   } catch (error) {
     console.error("Erreur lors de la récupération des annonces:", error);
     res.status(500).json({ error: "Erreur serveur" });

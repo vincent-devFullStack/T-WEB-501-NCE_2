@@ -48,12 +48,22 @@ const allowedOrigins = (
   process.env.CORS_ORIGINS ?? "http://localhost:3000,http://127.0.0.1:3000"
 )
   .split(",")
-  .map((s) => s.trim());
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+// Autoriser automatiquement le domaine Vercel courant si disponible
+const vercelUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : null;
+if (vercelUrl && !allowedOrigins.includes(vercelUrl)) {
+  allowedOrigins.push(vercelUrl);
+}
 
 app.use(
   cors({
     origin(origin, cb) {
       if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      if (origin.endsWith(".vercel.app")) return cb(null, true);
       cb(new Error("CORS blocked"));
     },
     credentials: true,

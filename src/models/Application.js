@@ -168,6 +168,146 @@ export const Application = {
       return acc;
     }, {});
   },
+
+  async findByAdAndPerson(adId, personId) {
+    const [rows] = await pool.query(
+      `SELECT * FROM applications WHERE ad_id = ? AND person_id = ? LIMIT 1`,
+      [adId, personId]
+    );
+    return mapApplication(rows[0]);
+  },
+
+  async hasNonRefusedForPerson(adId, personId) {
+    const [rows] = await pool.query(
+      `
+        SELECT application_id
+        FROM applications
+        WHERE ad_id = ? AND person_id = ? AND status != 'refuse'
+        LIMIT 1
+      `,
+      [adId, personId]
+    );
+    return rows.length > 0;
+  },
+
+  async createOrReapply({ adId, personId, cvPath = null, coverLetter = null }) {
+    const existing = await this.findByAdAndPerson(adId, personId);
+    if (existing && existing.status !== "refuse") {
+      return { status: "exists", application: existing };
+    }
+
+    if (existing) {
+      await pool.query(
+        `
+          UPDATE applications
+          SET cv_path = ?, cover_letter = ?, status = 'recu', application_date = NOW()
+          WHERE application_id = ?
+        `,
+        [cvPath, coverLetter, existing.id]
+      );
+      return { status: "reapplied", applicationId: existing.id };
+    }
+
+    const [result] = await pool.query(
+      `
+        INSERT INTO applications
+          (ad_id, person_id, cv_path, cover_letter, status, application_date)
+        VALUES (?, ?, ?, ?, 'recu', NOW())
+      `,
+      [adId, personId, cvPath, coverLetter]
+    );
+
+    return { status: "created", applicationId: result.insertId };
+  },
+
+  async listWithCandidateByAd(adId) {
+    const [rows] = await pool.query(
+      `
+        SELECT
+          ap.*,
+          p.first_name,
+          p.last_name,
+          p.email,
+          p.phone
+        FROM applications ap
+        LEFT JOIN people p ON ap.person_id = p.person_id
+        WHERE ap.ad_id = ?
+        ORDER BY ap.application_date DESC
+      `,
+      [adId]
+    );
+    return rows;
+  },
+
+  async ensureBelongsToRecruiter(applicationId, recruiterId) {
+    const [rows] = await pool.query(
+      `
+        SELECT
+          ap.application_id,
+          ap.ad_id,
+          ap.status
+        FROM applications ap
+        JOIN advertisements ad ON ap.ad_id = ad.ad_id
+        WHERE ap.application_id = ? AND ad.contact_person_id = ?
+        LIMIT 1
+      `,
+      [applicationId, recruiterId]
+    );
+    return rows[0] || null;
+  },
+
+  async updateStatus(applicationId, status) {
+    await pool.query(
+      "UPDATE applications SET status = ? WHERE application_id = ?",
+      [status, applicationId]
+    );
+    return this.findById(applicationId);
+  },
+
+  async updateStatusForRecruiter(applicationId, recruiterId, status) {
+    const ownership = await this.ensureBelongsToRecruiter(
+      applicationId,
+      recruiterId
+    );
+    if (!ownership) return null;
+    await pool.query(
+      "UPDATE applications SET status = ? WHERE application_id = ?",
+      [status, applicationId]
+    );
+    return this.findById(applicationId);
+  },
+
+  async countNewForRecruiter(recruiterId) {
+    const [[result]] = await pool.query(
+      `
+        SELECT COUNT(*) AS count
+        FROM applications ap
+        JOIN advertisements ad ON ap.ad_id = ad.ad_id
+        WHERE ad.contact_person_id = ? AND ap.status = 'recu'
+      `,
+      [recruiterId]
+    );
+    return Number(result?.count || 0);
+  },
+
+  async countNewForAd(adId, recruiterId = null) {
+    const params = [adId];
+    let ownershipClause = "";
+    if (recruiterId) {
+      ownershipClause =
+        " AND EXISTS (SELECT 1 FROM advertisements a WHERE a.ad_id = ap.ad_id AND a.contact_person_id = ?)";
+      params.push(recruiterId);
+    }
+    const [[result]] = await pool.query(
+      `
+        SELECT COUNT(*) AS count
+        FROM applications ap
+        WHERE ap.ad_id = ? AND ap.status = 'recu'${ownershipClause}
+      `,
+      params
+    );
+    return Number(result?.count || 0);
+  },
 };
 
 export default Application;

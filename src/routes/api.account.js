@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { pool } from "../config/db.js";
 import { requireAuth } from "../middleware/auth.js";
+import { User } from "../models/User.js";
+import { Company } from "../models/Company.js";
 
 const r = Router();
 
@@ -25,18 +26,12 @@ r.post("/profile", requireAuth, async (req, res) => {
       return res.status(400).json({ error: "Prénom et nom sont requis." });
     }
 
-    await pool.query(
-      `UPDATE people
-       SET first_name = ?, last_name = ?, phone = ?, linkedin_url = ?
-       WHERE person_id = ?`,
-      [
-        first_name.trim(),
-        last_name.trim(),
-        phone || null,
-        linkedin_url || null,
-        req.user.id,
-      ]
-    );
+    await User.update(req.user.id, {
+      firstName: first_name.trim(),
+      lastName: last_name.trim(),
+      phone: phone || null,
+      linkedinUrl: linkedin_url || null,
+    });
 
     return res.json({ ok: true });
   } catch (e) {
@@ -55,15 +50,8 @@ r.post("/profile", requireAuth, async (req, res) => {
  */
 r.get("/company", requireAuth, async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      `SELECT c.company_id, c.company_name
-       FROM people p
-       JOIN companies c ON c.company_id = p.company_id
-       WHERE p.person_id = ?
-       LIMIT 1`,
-      [req.user.id]
-    );
-    res.json({ company: rows[0] || null });
+    const company = await Company.findByUserId(req.user.id);
+    res.json({ company: company || null });
   } catch (e) {
     console.error("GET /api/account/company error:", e);
     res.status(500).json({ error: "Erreur serveur" });
@@ -85,28 +73,10 @@ r.post("/company", requireAuth, async (req, res) => {
     }
 
     const name = company_name.trim();
+    const ensured = await Company.ensureByName(name);
+    const companyId = ensured?.company_id ?? ensured?.id;
 
-    // Chercher une entreprise de même nom (insensible à la casse)
-    const [existing] = await pool.query(
-      `SELECT company_id, company_name FROM companies WHERE LOWER(company_name) = LOWER(?) LIMIT 1`,
-      [name]
-    );
-
-    let companyId = existing[0]?.company_id;
-    if (!companyId) {
-      // Créer la nouvelle entreprise
-      const [ins] = await pool.query(
-        `INSERT INTO companies (company_name, created_at) VALUES (?, NOW())`,
-        [name]
-      );
-      companyId = ins.insertId;
-    }
-
-    // Attacher l'utilisateur à cette entreprise
-    await pool.query(`UPDATE people SET company_id = ? WHERE person_id = ?`, [
-      companyId,
-      req.user.id,
-    ]);
+    await Company.attachToUser(req.user.id, companyId);
 
     return res
       .status(201)
@@ -132,20 +102,13 @@ r.put("/company", requireAuth, async (req, res) => {
     }
 
     // Récupérer l'entreprise actuelle de l'utilisateur
-    const [[user]] = await pool.query(
-      `SELECT company_id FROM people WHERE person_id = ?`,
-      [req.user.id]
-    );
+    const company = await Company.findByUserId(req.user.id);
 
-    if (!user?.company_id) {
+    if (!company?.company_id) {
       return res.status(400).json({ error: "Aucune entreprise rattachée." });
     }
 
-    // Mettre à jour le nom de l'entreprise
-    await pool.query(
-      `UPDATE companies SET company_name = ? WHERE company_id = ?`,
-      [company_name.trim(), user.company_id]
-    );
+    await Company.updateName(company.company_id, company_name.trim());
 
     return res.json({ ok: true });
   } catch (e) {

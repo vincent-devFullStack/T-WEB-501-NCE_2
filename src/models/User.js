@@ -21,6 +21,22 @@ function mapUser(r) {
   };
 }
 
+function mapUserWithCompany(row) {
+  if (!row) return null;
+  const user = mapUser(row);
+  return {
+    ...user,
+    company: row.company_id
+      ? {
+          id: row.company_id,
+          name:
+            row.company_name ?? row.name ?? row.nom ?? row.title ?? null,
+          industry: row.industry ?? null,
+        }
+      : null,
+  };
+}
+
 /** Build dynamic SET clause from allowed fields */
 function buildSet(data) {
   const fields = [];
@@ -150,6 +166,86 @@ export const User = {
       id,
     ]);
     return r.affectedRows > 0;
+  },
+
+  async fetchProfileRow(personId) {
+    const [rows] = await pool.query(
+      `
+        SELECT
+          p.person_id,
+          p.first_name,
+          p.last_name,
+          p.email,
+          p.phone,
+          p.linkedin_url,
+          p.person_type AS role,
+          p.company_id,
+          p.password_hash,
+          p.is_active,
+          p.created_at,
+          p.updated_at,
+          c.company_name,
+          c.industry
+        FROM people p
+        LEFT JOIN companies c ON c.company_id = p.company_id
+        WHERE p.person_id = ?
+        LIMIT 1
+      `,
+      [personId]
+    );
+    return rows[0] || null;
+  },
+
+  async findWithCompany(personId) {
+    const row = await this.fetchProfileRow(personId);
+    return mapUserWithCompany(row);
+  },
+
+  async getRecruiterContext(personId) {
+    const [rows] = await pool.query(
+      `
+        SELECT
+          p.person_id,
+          p.email,
+          p.company_id,
+          c.company_name,
+          c.industry
+        FROM people p
+        LEFT JOIN companies c ON c.company_id = p.company_id
+        WHERE p.person_id = ?
+        LIMIT 1
+      `,
+      [personId]
+    );
+    return rows[0] || null;
+  },
+
+  async ensureCandidateByEmail({ email, fullName = "", phone = null }) {
+    if (!email) throw new Error("email_required");
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const existing = await this.findByEmail(normalizedEmail);
+    if (existing) {
+      return existing.id;
+    }
+
+    const safeName = String(fullName || "").trim();
+    let firstName = safeName;
+    let lastName = "";
+    if (safeName.includes(" ")) {
+      const parts = safeName.split(" ");
+      firstName = parts.shift();
+      lastName = parts.join(" ");
+    }
+    if (!firstName) firstName = normalizedEmail.split("@")[0] || "Candidat";
+
+    const [result] = await pool.query(
+      `INSERT INTO people
+         (email, first_name, last_name, phone, person_type, created_at)
+       VALUES (?, ?, ?, ?, 'candidat', NOW())`,
+      [normalizedEmail, firstName, lastName || null, phone || null]
+    );
+
+    return result.insertId;
   },
 };
 

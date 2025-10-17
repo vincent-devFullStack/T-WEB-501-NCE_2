@@ -1,7 +1,10 @@
 // src/routes/ads.js
 import { Router } from "express";
-import { pool } from "../config/db.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { Ad } from "../models/Ad.js";
+import { Company } from "../models/Company.js";
+import { User } from "../models/User.js";
+import { Application } from "../models/Application.js";
 
 const r = Router();
 
@@ -12,47 +15,13 @@ r.get("/", async (req, res) => {
   try {
     const companyIdParam = req.query.company_id;
     const companyId = companyIdParam ? Number.parseInt(companyIdParam, 10) : null;
-    const filters = [`a.status = 'active'`];
-    const params = [];
-
-    if (Number.isInteger(companyId) && companyId > 0) {
-      filters.push("a.company_id = ?");
-      params.push(companyId);
-    }
-
-    const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
-
-    const [advertisements] = await pool.query(
-      `
-      SELECT
-        a.ad_id,
-        a.company_id,
-        a.job_title,
-        a.location,
-        a.contract_type,
-        a.salary_min,
-        a.salary_max,
-        a.currency,
-        a.created_at,
-        a.deadline_date,
-        c.company_name
-      FROM advertisements a
-      LEFT JOIN companies c ON a.company_id = c.company_id
-      ${whereClause}
-      ORDER BY a.created_at DESC
-    `,
-      params
-    );
+    const advertisements = await Ad.listPublicActive({
+      companyId: Number.isInteger(companyId) && companyId > 0 ? companyId : null,
+    });
 
     let companyInfo = null;
     if (Number.isInteger(companyId) && companyId > 0) {
-      const [[companyRow]] = await pool.query(
-        `SELECT company_id, company_name, industry FROM companies WHERE company_id = ? LIMIT 1`,
-        [companyId]
-      );
-      if (companyRow) {
-        companyInfo = companyRow;
-      }
+      companyInfo = await Company.findById(companyId);
     }
 
     return res.render("ads/list", {
@@ -74,24 +43,9 @@ r.get("/", async (req, res) => {
  */
 r.get("/new", requireAuth, requireRole("recruteur"), async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      `
-      SELECT
-        p.email,
-        p.company_id,
-        c.*
-      FROM people p
-      LEFT JOIN companies c ON c.company_id = p.company_id
-      WHERE p.person_id = ?
-      `,
-      [req.user.id]
-    );
+    const u = await User.getRecruiterContext(req.user.id);
 
-    const u = rows?.[0] || {};
-
-    // Fallbacks possibles selon la colonne réellement présente dans "companies"
-    const computedCompanyName =
-      u.company_name ?? u.name ?? u.nom ?? u.title ?? null;
+    const computedCompanyName = u?.company_name ?? null;
 
     return res.render("ads/create", {
       title: "Créer une offre",
@@ -110,18 +64,7 @@ r.get("/new", requireAuth, requireRole("recruteur"), async (req, res) => {
  */
 r.get("/my-ads", requireAuth, requireRole("recruteur"), async (req, res) => {
   try {
-    const [ads] = await pool.query(
-      `
-      SELECT 
-        a.*,
-        c.company_name
-      FROM advertisements a
-      LEFT JOIN companies c ON a.company_id = c.company_id
-      WHERE a.contact_person_id = ?
-      ORDER BY a.created_at DESC
-      `,
-      [req.user.id]
-    );
+    const ads = await Ad.listForRecruiter(req.user.id);
 
     return res.render("ads/my-ads", {
       title: "Mes offres",
@@ -145,32 +88,14 @@ r.get(
       const adId = Number(req.params.id);
 
       // Vérifier que l'offre appartient bien à l'utilisateur
-      const [[ad]] = await pool.query(
-        `SELECT a.*, c.company_name 
-       FROM advertisements a
-       LEFT JOIN companies c ON a.company_id = c.company_id
-       WHERE a.ad_id = ? AND a.contact_person_id = ?`,
-        [adId, req.user.id]
-      );
+      const ad = await Ad.findForRecruiter(adId, req.user.id);
 
       if (!ad) {
         return res.status(403).send("Accès refusé ou offre introuvable.");
       }
 
       // Récupérer toutes les candidatures pour cette offre
-      const [applications] = await pool.query(
-        `SELECT 
-        ap.*,
-        p.first_name,
-        p.last_name,
-        p.email,
-        p.phone
-       FROM applications ap
-       LEFT JOIN people p ON ap.person_id = p.person_id
-       WHERE ap.ad_id = ?
-       ORDER BY ap.application_date DESC`,
-        [adId]
-      );
+      const applications = await Application.listWithCandidateByAd(adId);
 
       return res.render("ads/candidatures", {
         title: `Candidatures - ${ad.job_title}`,
@@ -192,10 +117,7 @@ r.get(
 r.post("/", requireAuth, requireRole("recruteur"), async (req, res) => {
   try {
     // Récupérer company_id du recruteur connecté
-    const [[me]] = await pool.query(
-      "SELECT company_id, email FROM people WHERE person_id = ?",
-      [req.user.id]
-    );
+    const me = await User.getRecruiterContext(req.user.id);
 
     if (!me?.company_id) {
       // Pas d'entreprise rattachée -> on ré-affiche la page avec un état adapté
@@ -230,32 +152,25 @@ r.post("/", requireAuth, requireRole("recruteur"), async (req, res) => {
     }
 
     // Insertion de l'offre
-    await pool.query(
-      `
-      INSERT INTO advertisements
-        (company_id, contact_person_id, job_title, job_description, requirements, location,
-         contract_type, working_time, experience_level, remote_option,
-         salary_min, salary_max, currency, deadline_date, status)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-      `,
-      [
-        me.company_id,
-        req.user.id,
-        job_title?.trim(),
-        job_description?.trim() || null,
-        requirements?.trim() || null,
-        location?.trim() || null,
-        contract_type || null,
-        working_time || null,
-        experience_level || null,
-        remote_option || null,
-        salary_min ? Number(salary_min) : null,
-        salary_max ? Number(salary_max) : null,
-        currency || "EUR",
-        deadline_date || null,
-        status || null,
-      ]
-    );
+    await Ad.createForRecruiter({
+      recruiterId: req.user.id,
+      companyId: me.company_id,
+      data: {
+        job_title,
+        job_description,
+        requirements,
+        location,
+        contract_type,
+        working_time,
+        experience_level,
+        remote_option,
+        salary_min,
+        salary_max,
+        currency,
+        deadline_date,
+        status,
+      },
+    });
 
     // Redirection simple après création
     return res.redirect("/");
@@ -273,13 +188,7 @@ r.get("/:id/edit", requireAuth, requireRole("recruteur"), async (req, res) => {
     const adId = Number(req.params.id);
 
     // Récupérer l'offre et vérifier qu'elle appartient à l'utilisateur
-    const [[ad]] = await pool.query(
-      `SELECT a.*, c.company_name
-       FROM advertisements a
-       LEFT JOIN companies c ON a.company_id = c.company_id
-       WHERE a.ad_id = ? AND a.contact_person_id = ?`,
-      [adId, req.user.id]
-    );
+    const ad = await Ad.findForRecruiter(adId, req.user.id);
 
     if (!ad) {
       return res.status(403).send("Accès refusé ou offre introuvable.");
@@ -303,12 +212,9 @@ r.post("/:id/edit", requireAuth, requireRole("recruteur"), async (req, res) => {
     const adId = Number(req.params.id);
 
     // Vérifier que l'offre appartient à l'utilisateur
-    const [[ad]] = await pool.query(
-      "SELECT contact_person_id FROM advertisements WHERE ad_id = ?",
-      [adId]
-    );
+    const ad = await Ad.ensureOwnership(adId, req.user.id);
 
-    if (!ad || ad.contact_person_id !== req.user.id) {
+    if (!ad) {
       return res.status(403).send("Accès refusé.");
     }
 
@@ -345,39 +251,21 @@ r.post("/:id/edit", requireAuth, requireRole("recruteur"), async (req, res) => {
     const dbStatus = STATUS_MAP[status.toLowerCase()] || status;
 
     // Mise à jour
-    await pool.query(
-      `UPDATE advertisements SET
-        job_title = ?,
-        job_description = ?,
-        requirements = ?,
-        location = ?,
-        contract_type = ?,
-        working_time = ?,
-        experience_level = ?,
-        remote_option = ?,
-        salary_min = ?,
-        salary_max = ?,
-        currency = ?,
-        deadline_date = ?,
-        status = ?
-       WHERE ad_id = ?`,
-      [
-        job_title?.trim(),
-        job_description?.trim() || null,
-        requirements?.trim() || null,
-        location?.trim() || null,
-        contract_type || null,
-        working_time || null,
-        experience_level || null,
-        remote_option || null,
-        salary_min ? Number(salary_min) : null,
-        salary_max ? Number(salary_max) : null,
-        currency || "EUR",
-        deadline_date || null,
-        dbStatus, // ⚠️ Utilise le statut converti
-        adId,
-      ]
-    );
+    await Ad.updateForRecruiter(adId, req.user.id, {
+      job_title,
+      job_description,
+      requirements,
+      location,
+      contract_type,
+      working_time,
+      experience_level,
+      remote_option,
+      salary_min,
+      salary_max,
+      currency,
+      deadline_date,
+      status: dbStatus,
+    });
 
     return res.redirect("/ads/my-ads");
   } catch (e) {

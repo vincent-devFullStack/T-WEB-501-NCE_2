@@ -5,6 +5,7 @@
 // ==============================
 let people = [];
 let advertisements = [];
+let companies = []; // <— NEW
 
 async function fetchJSON(url) {
   const r = await fetch(url, { credentials: "include" });
@@ -12,27 +13,67 @@ async function fetchJSON(url) {
   return r.json();
 }
 
+function uniqBy(arr, keyFn) {
+  const m = new Map();
+  for (const it of arr) {
+    const k = keyFn(it);
+    if (!m.has(k)) m.set(k, it);
+  }
+  return Array.from(m.values());
+}
+
 async function loadData() {
   try {
-    // 1) Essaie l'API
-    // NOTE: adapte ces endpoints si tu as des routes différentes.
+    // 1) Annonces
     const adsRes = await fetchJSON("/api/ads");
     advertisements = Array.isArray(adsRes) ? adsRes : adsRes.ads || [];
 
-    // Si tu as un endpoint pour l'admin/utilisateurs :
+    // 2) Utilisateurs (si route dispo)
     try {
       const usersRes = await fetchJSON("/api/admin/people");
       people = Array.isArray(usersRes) ? usersRes : usersRes.people || [];
     } catch {
-      // Si pas de route users encore -> fallback (mock)
       const m = await import("./mock-data.js");
       if (!people.length) people = m.people || [];
     }
+
+    // 3) Entreprises (NOUVEAU)
+    try {
+      const compRes = await fetchJSON("/api/companies");
+      const list = Array.isArray(compRes) ? compRes : compRes.companies || [];
+      companies = list
+        .filter(Boolean)
+        .map((c) => ({
+          company_id: c.company_id ?? c.id ?? null,
+          company_name: c.company_name ?? c.name ?? "Entreprise",
+        }))
+        .filter((c) => c.company_name);
+    } catch {
+      // Fallback : reconstituer depuis les annonces
+      const derived = advertisements
+        .filter((a) => a && (a.company_id != null || a.company_name))
+        .map((a) => ({
+          company_id:
+            a.company_id ?? `name:${(a.company_name || "").toLowerCase()}`,
+          company_name: a.company_name || "Entreprise",
+        }));
+      companies = uniqBy(derived, (c) => c.company_id ?? c.company_name);
+    }
   } catch {
-    // 2) Fallback mock complet
+    // Fallback complet
     const m = await import("./mock-data.js");
     people = m.people || [];
     advertisements = m.advertisements || [];
+
+    // Fallback entreprises depuis mock ads
+    const derived = advertisements
+      .filter((a) => a && (a.company_id != null || a.company_name))
+      .map((a) => ({
+        company_id:
+          a.company_id ?? `name:${(a.company_name || "").toLowerCase()}`,
+        company_name: a.company_name || "Entreprise",
+      }));
+    companies = uniqBy(derived, (c) => c.company_id ?? c.company_name);
   }
 }
 
@@ -144,8 +185,7 @@ function displayUsersList() {
   if (!tbody) return;
 
   if (!people.length) {
-    tbody.innerHTML = `
-      <tr><td colspan="5" class="loading-cell">Aucun utilisateur trouvé</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="loading-cell">Aucun utilisateur trouvé</td></tr>`;
     return;
   }
 
@@ -185,8 +225,7 @@ function displayAdsList() {
   if (!tbody) return;
 
   if (!advertisements.length) {
-    tbody.innerHTML = `
-      <tr><td colspan="7" class="loading-cell">Aucune annonce trouvée</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="loading-cell">Aucune annonce trouvée</td></tr>`;
     return;
   }
 
@@ -280,16 +319,112 @@ window.viewAd = function (adId) {
 };
 
 // ==============================
+// Champ Entreprise : ID -> Nom (SELECT)
+// ==============================
+
+function populateCompanySelect(selectEl, currentCompanyId = null) {
+  if (!selectEl) return;
+  // Nettoyage
+  selectEl.innerHTML = "";
+
+  // Placeholder
+  const opt0 = document.createElement("option");
+  opt0.value = "";
+  opt0.textContent = "— Sélectionner une entreprise —";
+  selectEl.appendChild(opt0);
+
+  // Options entreprises
+  companies
+    .slice()
+    .sort((a, b) =>
+      a.company_name.localeCompare(b.company_name, "fr", {
+        sensitivity: "base",
+      })
+    )
+    .forEach((c) => {
+      const opt = document.createElement("option");
+      opt.value = c.company_id ?? "";
+      opt.textContent = c.company_name || `Entreprise ${c.company_id ?? ""}`;
+      if (
+        currentCompanyId != null &&
+        String(currentCompanyId) === String(c.company_id)
+      ) {
+        opt.selected = true;
+      }
+      selectEl.appendChild(opt);
+    });
+}
+
+/**
+ * Transforme l’input [name="company_id"] en <select> affichant les NOMS
+ * - value = company_id (pour le backend)
+ * - label visible = company_name
+ */
+function upgradeCompanyField(defaultCompanyId = null) {
+  const form = document.querySelector("#admin-form");
+  if (!form) return;
+
+  // Cherche un champ existant "company_id" (input ou select déjà présent)
+  let field = form.querySelector('[name="company_id"]');
+  if (!field) {
+    // Essaye avec un id fallback
+    field = form.querySelector("#company_id");
+  }
+  if (!field) return;
+
+  if (field.tagName.toLowerCase() === "select") {
+    // Déjà un select : juste peupler
+    populateCompanySelect(field, defaultCompanyId ?? field.value ?? null);
+    return;
+  }
+
+  // Remplacer l'input par un select
+  const select = document.createElement("select");
+  select.name = "company_id";
+  select.id = field.id || "company_id";
+  select.className = field.className || "";
+  select.required = field.required || false;
+
+  // Copie des attributs utiles
+  ["disabled"].forEach((attr) => {
+    if (field.hasAttribute(attr))
+      select.setAttribute(attr, field.getAttribute(attr));
+  });
+
+  // Insère le select à la place de l’input
+  field.parentNode.replaceChild(select, field);
+
+  // Peuple avec les noms d’entreprises
+  populateCompanySelect(select, defaultCompanyId);
+}
+
+// ==============================
 // ACTIONS (placeholder)
 // ==============================
 window.editUser = function (userId) {
   const user = people.find((p) => p.person_id === userId);
-  alert(
-    `Modifier l'utilisateur: ${
-      user ? user.first_name + " " + user.last_name : userId
-    }`
-  );
+
+  // Si tu as déjà un modal ouvert côté HTML, on se contente d’améliorer le champ entreprise :
+  //  - on tente d’inférer la valeur courante (company_id) depuis l’utilisateur si dispo
+  const currentCompanyId =
+    user &&
+    (user.company_id != null ? user.company_id : user.company?.company_id);
+
+  // Upgrade du champ “ID entreprise” -> select par nom
+  upgradeCompanyField(currentCompanyId);
+
+  // (garde l’ancien comportement si aucun modal n’est branché)
+  if (!user) {
+    alert(`Modifier l'utilisateur: ${userId}`);
+  } else {
+    // Si tu veux pré-remplir les autres champs, fais-le ici en ciblant #admin-form …
+    // Ex:
+    // const f = document.querySelector("#admin-form");
+    // f.elements.first_name.value = user.first_name || "";
+    // ...
+  }
 };
+
 window.deleteUser = function (userId) {
   const user = people.find((p) => p.person_id === userId);
   if (
@@ -302,10 +437,12 @@ window.deleteUser = function (userId) {
     alert("Fonctionnalité à implémenter");
   }
 };
+
 window.editAd = function (adId) {
   const ad = advertisements.find((a) => a.ad_id === adId);
   alert(`Modifier l'annonce: ${ad ? ad.job_title : adId}`);
 };
+
 window.deleteAd = function (adId) {
   const ad = advertisements.find((a) => a.ad_id === adId);
   if (
@@ -327,6 +464,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   // KPI
   updateUserKPI();
   updateAdsKPI();
+
+  // Upgrade du champ entreprise au chargement (pour le cas "nouvel enregistrement")
+  upgradeCompanyField(null);
 
   // Clicks cartes -> listes
   const usersCard = $id("users-card");

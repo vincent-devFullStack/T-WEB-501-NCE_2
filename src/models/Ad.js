@@ -228,6 +228,186 @@ export const Ad = {
     );
     return rows[0] || null;
   },
+
+  async findActiveById(adId) {
+    const [rows] = await pool.query(
+      `
+        SELECT ad_id, company_id, contact_person_id, status
+        FROM advertisements
+        WHERE ad_id = ? AND status = 'active'
+        LIMIT 1
+      `,
+      [adId]
+    );
+    return rows[0] || null;
+  },
+
+  async ensureOwnership(adId, recruiterId) {
+    const [rows] = await pool.query(
+      `
+        SELECT
+          a.ad_id,
+          a.company_id,
+          a.contact_person_id,
+          a.job_title,
+          a.status
+        FROM advertisements a
+        WHERE a.ad_id = ? AND a.contact_person_id = ?
+        LIMIT 1
+      `,
+      [adId, recruiterId]
+    );
+    return rows[0] || null;
+  },
+
+  async listForRecruiter(recruiterId) {
+    const [rows] = await pool.query(
+      `
+        SELECT
+          a.*,
+          c.company_name
+        FROM advertisements a
+        LEFT JOIN companies c ON a.company_id = c.company_id
+        WHERE a.contact_person_id = ?
+        ORDER BY a.created_at DESC
+      `,
+      [recruiterId]
+    );
+    return rows;
+  },
+
+  async findForRecruiter(adId, recruiterId) {
+    const [rows] = await pool.query(
+      `
+        SELECT
+          a.*,
+          c.company_name
+        FROM advertisements a
+        LEFT JOIN companies c ON a.company_id = c.company_id
+        WHERE a.ad_id = ? AND a.contact_person_id = ?
+        LIMIT 1
+      `,
+      [adId, recruiterId]
+    );
+    return rows[0] || null;
+  },
+
+  async createForRecruiter({ recruiterId, companyId, data }) {
+    if (!companyId) throw new Error("company_id_required");
+    const allowed = {
+      job_title: null,
+      job_description: null,
+      requirements: null,
+      location: null,
+      contract_type: null,
+      working_time: null,
+      experience_level: null,
+      remote_option: null,
+      salary_min: null,
+      salary_max: null,
+      currency: "EUR",
+      deadline_date: null,
+      status: "active",
+    };
+
+    const columns = ["company_id", "contact_person_id"];
+    const values = [companyId, recruiterId];
+
+    for (const [key, defaultValue] of Object.entries(allowed)) {
+      const raw = data?.[key];
+      let value = raw;
+      if (raw === undefined || raw === null || raw === "") {
+        value = defaultValue ?? null;
+      } else if (typeof raw === "string") {
+        value = raw.trim();
+        if (value === "") value = defaultValue ?? null;
+      }
+
+      if (key === "salary_min" || key === "salary_max") {
+        value = raw ? Number(raw) : null;
+        if (!Number.isFinite(value)) value = null;
+      }
+
+      columns.push(key);
+      values.push(value);
+    }
+
+    const placeholders = columns.map(() => "?").join(", ");
+    const sql = `
+      INSERT INTO advertisements (${columns.join(", ")})
+      VALUES (${placeholders})
+    `;
+    const [result] = await pool.query(sql, values);
+    return this.findForRecruiter(result.insertId, recruiterId);
+  },
+
+  async updateForRecruiter(adId, recruiterId, updates) {
+    const ownership = await this.ensureOwnership(adId, recruiterId);
+    if (!ownership) return null;
+
+    const allowedMap = {
+      job_title: (value) => (value ? String(value).trim() : null),
+      job_description: (value) => (value ? String(value).trim() : null),
+      requirements: (value) => (value ? String(value).trim() : null),
+      location: (value) => (value ? String(value).trim() : null),
+      contract_type: (value) => (value ? String(value).trim() : null),
+      working_time: (value) => (value ? String(value).trim() : null),
+      experience_level: (value) => (value ? String(value).trim() : null),
+      remote_option: (value) => (value ? String(value).trim() : null),
+      salary_min: (value) => {
+        const num = Number(value);
+        return Number.isFinite(num) ? num : null;
+      },
+      salary_max: (value) => {
+        const num = Number(value);
+        return Number.isFinite(num) ? num : null;
+      },
+      currency: (value) => (value ? String(value).trim() : "EUR"),
+      deadline_date: (value) => (value ? String(value).trim() : null),
+      status: (value) => (value ? String(value).trim() : null),
+    };
+
+    const fields = [];
+    const values = [];
+    for (const [key, transform] of Object.entries(allowedMap)) {
+      if (!Object.prototype.hasOwnProperty.call(updates, key)) continue;
+      const transformed = transform(updates[key]);
+      fields.push(`${key} = ?`);
+      values.push(transformed);
+    }
+
+    if (!fields.length) {
+      return this.findForRecruiter(adId, recruiterId);
+    }
+
+    await pool.query(
+      `
+        UPDATE advertisements
+        SET ${fields.join(", ")}
+        WHERE ad_id = ? AND contact_person_id = ?
+      `,
+      [...values, adId, recruiterId]
+    );
+
+    return this.findForRecruiter(adId, recruiterId);
+  },
+
+  async removeForRecruiter(adId, recruiterId) {
+    const ownership = await this.ensureOwnership(adId, recruiterId);
+    if (!ownership) return false;
+    await pool.query("DELETE FROM advertisements WHERE ad_id = ?", [adId]);
+    return true;
+  },
+
+  async updateStatusForRecruiter(adId, recruiterId, status) {
+    const ownership = await this.ensureOwnership(adId, recruiterId);
+    if (!ownership) return null;
+    await pool.query(
+      "UPDATE advertisements SET status = ? WHERE ad_id = ?",
+      [status, adId]
+    );
+    return this.findForRecruiter(adId, recruiterId);
+  },
 };
 
 export default Ad;

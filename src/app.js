@@ -13,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // DB
-import { pool, assertDbConnection } from "./config/db.js";
+import { assertDbConnection } from "./config/db.js";
 
 // Auth
 import { attachUserIfAny } from "./middleware/auth.js";
@@ -27,6 +27,7 @@ import apiAuthRoutes from "./routes/api.auth.js"; // API /api/auth
 import profileRoutes from "./routes/profile.js"; // SSR /profile
 import apiAccountRoutes from "./routes/api.account.js"; // API /api/account
 import apiAdminRoutes from "./routes/api.admin.js"; // API /api/admin
+import { System } from "./models/System.js";
 
 console.log("[BOOT]", {
   file: import.meta.url,
@@ -97,8 +98,8 @@ app.get("/__ping", (_req, res) => {
 // Healthz
 app.get("/healthz", async (_req, res) => {
   try {
-    const [rows] = await pool.query("SELECT 1 AS ok");
-    res.json({ ok: true, db: rows?.[0]?.ok === 1 });
+    const dbOk = await System.ping();
+    res.json({ ok: true, db: dbOk });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }

@@ -48,19 +48,6 @@ const APPLICATION_STATUSES = [
   { value: "recrute", label: "Recruté" },
 ];
 
-const APPLICATION_LOG_EVENTS = [
-  { value: "email", label: "Email" },
-  { value: "call", label: "Appel" },
-  { value: "message", label: "Message" },
-  { value: "status_change", label: "Changement de statut" },
-  { value: "note", label: "Note" },
-];
-
-const APPLICATION_LOG_DIRECTIONS = [
-  { value: "out", label: "Sortant" },
-  { value: "in", label: "Entrant" },
-];
-
 export const ADMIN_TABLES = {
   people: {
     label: "Utilisateurs",
@@ -533,84 +520,6 @@ export const ADMIN_TABLES = {
         showInTable: false,
         creatable: false,
         editable: false,
-      },
-    ],
-  },
-  application_logs: {
-    label: "Historique candidatures",
-    description: "Journal des interactions liées aux candidatures.",
-    primaryKey: "log_id",
-    defaultSort: [{ column: "occurred_at", direction: "DESC" }],
-    searchColumns: ["subject", "event_type", "direction"],
-    fields: [
-      { name: "log_id", label: "ID", type: "readonly", showInTable: true },
-      {
-        name: "application_id",
-        label: "ID candidature",
-        type: "number",
-        required: true,
-        showInTable: true,
-        creatable: true,
-        editable: true,
-      },
-      {
-        name: "event_type",
-        label: "Type d'événement",
-        type: "select",
-        required: true,
-        options: APPLICATION_LOG_EVENTS,
-        showInTable: true,
-        creatable: true,
-        editable: true,
-      },
-      {
-        name: "direction",
-        label: "Direction",
-        type: "select",
-        options: APPLICATION_LOG_DIRECTIONS,
-        showInTable: true,
-        creatable: true,
-        editable: true,
-      },
-      {
-        name: "subject",
-        label: "Sujet",
-        type: "text",
-        showInTable: true,
-        creatable: true,
-        editable: true,
-      },
-      {
-        name: "body",
-        label: "Contenu",
-        type: "textarea",
-        showInTable: false,
-        creatable: true,
-        editable: true,
-      },
-      {
-        name: "occurred_at",
-        label: "Survenu le",
-        type: "datetime",
-        showInTable: true,
-        creatable: true,
-        editable: true,
-      },
-      {
-        name: "meta",
-        label: "Meta (JSON)",
-        type: "textarea",
-        showInTable: false,
-        creatable: true,
-        editable: true,
-      },
-      {
-        name: "created_by_person_id",
-        label: "Créé par (person_id)",
-        type: "number",
-        showInTable: true,
-        creatable: true,
-        editable: true,
       },
     ],
   },

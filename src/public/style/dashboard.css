@@ -11,6 +11,12 @@
   gap: 24px;
 }
 
+.dashboard-header {
+  border-radius: 20px;
+  padding: 10px;
+  z-index: 1;
+}
+
 .dashboard-header h1 {
   margin: 0;
   font-size: 32px;
@@ -87,6 +93,7 @@
   border: 1px solid #eef0f4;
   display: flex;
   flex-direction: column;
+  z-index: 0;
 }
 
 .dashboard-panel__header {
@@ -207,6 +214,88 @@
   background: #fecaca;
 }
 
+.data-table[data-table="advertisements"] {
+  table-layout: auto;
+}
+
+.data-table[data-table="advertisements"] th,
+.data-table[data-table="advertisements"] td {
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.data-table[data-table="advertisements"] td {
+  word-break: break-word;
+}
+
+.data-table[data-table="advertisements"] th:nth-child(1),
+.data-table[data-table="advertisements"] td:nth-child(1),
+.data-table[data-table="advertisements"] th:nth-child(2),
+.data-table[data-table="advertisements"] td:nth-child(2),
+.data-table[data-table="advertisements"] th:nth-child(3),
+.data-table[data-table="advertisements"] td:nth-child(3) {
+  width: 70px;
+}
+
+.data-table[data-table="advertisements"] th:nth-child(4),
+.data-table[data-table="advertisements"] td:nth-child(4) {
+  width: 220px;
+}
+
+.data-table[data-table="advertisements"] th:nth-child(5),
+.data-table[data-table="advertisements"] td:nth-child(5) {
+  width: 120px;
+}
+
+.data-table[data-table="advertisements"] th:nth-child(6),
+.data-table[data-table="advertisements"] td:nth-child(6) {
+  width: 90px;
+}
+
+.data-table[data-table="advertisements"] th:nth-child(7),
+.data-table[data-table="advertisements"] td:nth-child(7),
+.data-table[data-table="advertisements"] th:nth-child(8),
+.data-table[data-table="advertisements"] td:nth-child(8) {
+  width: 100px;
+}
+
+.data-table[data-table="advertisements"] th:nth-child(9),
+.data-table[data-table="advertisements"] td:nth-child(9) {
+  width: 110px;
+}
+
+.data-table[data-table="advertisements"] th:nth-child(10),
+.data-table[data-table="advertisements"] td:nth-child(10) {
+  width: 90px;
+}
+
+.data-table[data-table="advertisements"] th:nth-child(11),
+.data-table[data-table="advertisements"] td:nth-child(11) {
+  width: 150px;
+}
+
+.data-table[data-table="advertisements"] th:nth-child(12),
+.data-table[data-table="advertisements"] td:nth-child(12) {
+  width: 120px;
+}
+
+.data-table[data-table="advertisements"] .table-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.data-table[data-table="advertisements"] .table-actions .btn-action {
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.data-table[data-table="advertisements"] td:nth-child(12) {
+  word-break: normal;
+}
+
 .loading-cell {
   text-align: center;
   padding: 40px !important;
@@ -267,18 +356,26 @@
 }
 
 /* ==============================
-   MODAL FORM
+   MODAL FORM (ADMIN)
    ============================== */
 
+/* Régle la hauteur de la navbar ici */
+:root {
+  --navbar-height: 72px; /* ajuste si ta navbar est plus haute/basse */
+  --modal-margin: 16px; /* marge sous la navbar */
+}
+
+/* Backdrop : on aligne en haut pour éviter le chevauchement navbar */
 .admin-modal {
   position: fixed;
   inset: 0;
   backdrop-filter: blur(2px);
   background: rgba(15, 23, 42, 0.35);
   display: none;
-  align-items: center;
+  align-items: flex-start; /* au lieu de center */
   justify-content: center;
   padding: 24px;
+  padding-top: calc(var(--navbar-height) + var(--modal-margin));
   z-index: 1200;
 }
 
@@ -290,11 +387,12 @@
   background: var(--card);
   border-radius: 16px;
   width: min(560px, 100%);
-  max-height: 90vh;
+  /* Hauteur limitée en fonction de la navbar + marge + padding bas */
+  max-height: calc(100vh - var(--navbar-height) - var(--modal-margin) - 24px);
   display: flex;
   flex-direction: column;
   box-shadow: 0 30px 60px rgba(15, 23, 42, 0.2);
-  overflow: hidden;
+  overflow: hidden; /* évite le scroll global du dialog */
 }
 
 .admin-modal__header {
@@ -303,6 +401,7 @@
   justify-content: space-between;
   padding: 20px 24px;
   border-bottom: 1px solid #eef0f4;
+  flex-shrink: 0;
 }
 
 .admin-modal__header h2 {
@@ -324,11 +423,23 @@
   color: var(--brand);
 }
 
+/* Le <form> occupe l'espace restant, le corps scrolle */
+.admin-modal__dialog form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden; /* évite double scroll */
+}
+
 .admin-form-body {
   padding: 24px;
-  overflow-y: auto;
+  overflow-y: auto; /* zone scrollable */
   display: grid;
   gap: 16px;
+  flex: 1 1 auto;
+  min-height: 0; /* clé pour scroll en flex */
+  -webkit-overflow-scrolling: touch;
 }
 
 .admin-form-group {
@@ -352,6 +463,7 @@
   font-size: 14px;
   font-family: inherit;
   transition: all 0.2s ease;
+  background: #fff;
 }
 
 .admin-form-group textarea {
@@ -373,6 +485,8 @@
   gap: 12px;
   padding: 16px 24px;
   border-top: 1px solid #eef0f4;
+  flex-shrink: 0; /* reste visible */
+  background: #fff; /* contraste sous le scroll */
 }
 
 /* ==============================
@@ -491,7 +605,24 @@
   .pagination-btn {
     width: 100%;
   }
+
+  :root {
+    --navbar-height: 80px;
+  } /* souvent plus haute sur mobile */
+  .admin-modal {
+    padding: 16px;
+    padding-top: calc(var(--navbar-height) + 10px);
+  }
+  .admin-modal__dialog {
+    max-height: calc(100vh - var(--navbar-height) - 10px - 16px);
+  }
 }
+
+/* ==============================
+   KPI CARDS
+   ============================== */
+
+.kpi-card-item {
   border: 2px solid #e5e7eb;
   border-radius: 16px;
   padding: 30px;
@@ -523,17 +654,15 @@
 .legend-color.cdi {
   background: #10b981;
 }
-
 .legend-color.stage {
   background: #f59e0b;
 }
-
 .legend-color.alternance {
   background: #8b5cf6;
 }
 
 /* ==============================
-   BADGE TYPE DE CONTRAT
+   BADGE TYPE DE CONTRAT / STATUT
    ============================== */
 
 .contract-badge {
@@ -549,23 +678,19 @@
   background: #d1fae5;
   color: #065f46;
 }
-
 .contract-badge.stage {
   background: #fef3c7;
   color: #92400e;
 }
-
 .contract-badge.alternance {
   background: #ede9fe;
   color: #5b21b6;
 }
-
 .contract-badge.cdd {
   background: #dbeafe;
   color: #1e40af;
 }
 
-/* Badge statut */
 .status-badge {
   display: inline-block;
   padding: 4px 12px;
@@ -573,19 +698,17 @@
   font-size: 12px;
   font-weight: 600;
 }
-
 .status-badge.active {
   background: #d1fae5;
   color: #065f46;
 }
-
 .status-badge.inactive {
   background: #fee2e2;
   color: #991b1b;
 }
 
 /* ==============================
-   MODAL
+   MODAL GÉNÉRIQUE (si tu l’utilises ailleurs)
    ============================== */
 
 .modal {
@@ -603,8 +726,12 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .modal-content {
@@ -673,17 +800,16 @@
   line-height: 1.6;
 }
 
-/* Bouton consulter */
+/* Bouton consulter (table annonces) */
 .btn-view {
   background: #dac930;
   color: #1f2937;
 }
-
 .btn-view:hover {
   background: #e5e7eb;
 }
 
-/* Liste des annonces */
+/* Section liste des annonces */
 .ads-list-section {
   background: white;
   border-radius: 16px;

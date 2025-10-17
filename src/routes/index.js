@@ -1,9 +1,9 @@
 // src/routes/index.js
 import { Router } from "express";
-import { pool } from "../config/db.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { ADMIN_TABLES } from "../config/adminTables.js";
 import { Application } from "../models/Application.js";
+import { Company } from "../models/Company.js";
 
 const r = Router();
 
@@ -14,52 +14,16 @@ r.get("/", (_req, res) => {
 r.get("/entreprise", async (req, res) => {
   try {
     const selectedIndustry = String(req.query.secteur ?? "").trim() || null;
-    const [industriesRows] = await pool.query(
-      `
-      SELECT DISTINCT industry
-      FROM companies
-      WHERE industry IS NOT NULL AND industry <> ''
-      ORDER BY industry ASC
-      `
-    );
-
-    const industries = industriesRows
-      .map((row) => row.industry)
-      .filter((value) => Boolean(value));
-
-    const filters = [];
-    const params = [];
-
-    if (selectedIndustry) {
-      filters.push("c.industry = ?");
-      params.push(selectedIndustry);
-    }
-
-    const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
-
-    const [rows] = await pool.query(
-      `
-      SELECT 
-        c.company_id,
-        c.company_name,
-        c.industry,
-        c.created_at,
-        COUNT(CASE WHEN a.status = 'active' THEN 1 END) AS active_ads_count
-      FROM companies c
-      LEFT JOIN advertisements a ON a.company_id = c.company_id
-      ${whereClause}
-      GROUP BY c.company_id, c.company_name, c.industry, c.created_at
-      ORDER BY c.company_name ASC
-      `,
-      params
-    );
+    const industries = await Company.listIndustries();
+    const rows = await Company.listWithActiveAds({
+      industry: selectedIndustry,
+    });
     const formatter = new Intl.DateTimeFormat("fr-FR", {
       month: "long",
       year: "numeric",
     });
     const companies = rows.map((company) => ({
       ...company,
-      active_ads_count: Number(company.active_ads_count || 0),
       created_at_label: company.created_at
         ? formatter.format(company.created_at)
         : null,

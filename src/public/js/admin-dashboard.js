@@ -20,6 +20,7 @@ const elements = {
   tableDescription: document.getElementById("admin-table-description"),
   tableHead: document.querySelector("#admin-data-table thead"),
   tableBody: document.querySelector("#admin-data-table tbody"),
+  table: document.getElementById("admin-data-table"),
   searchInput: document.getElementById("admin-table-search"),
   createButton: document.getElementById("admin-create-btn"),
   prevButton: document.getElementById("admin-prev-page"),
@@ -236,6 +237,7 @@ function switchTable(newTable) {
   state.page = 1;
   state.search = "";
   if (elements.searchInput) elements.searchInput.value = "";
+  if (elements.table) elements.table.dataset.table = newTable;
   elements.tabs.forEach((tab) => {
     const isActive = tab.dataset.table === newTable;
     tab.classList.toggle("is-active", isActive);
@@ -542,6 +544,7 @@ function initialiseView() {
     }
     return;
   }
+  if (elements.table) elements.table.dataset.table = state.currentTable;
   const tableConfig = tablesMap.get(state.currentTable);
   refreshPanelHeader(tableConfig);
   fetchTableData();

@@ -223,3 +223,48 @@ select:focus {
   color: #0f172a;
   box-shadow: none;
 }
+
+.page-error {
+  min-height: calc(100vh - 180px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+}
+
+.page-error__card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 48px;
+  text-align: center;
+  max-width: 520px;
+  width: 100%;
+  display: grid;
+  gap: 18px;
+}
+
+.page-error__code {
+  font-size: 64px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--brand);
+}
+
+.page-error__message {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.page-error__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.page-error__actions .btn,
+.page-error__actions .btn-secondary {
+  min-width: 180px;
+}

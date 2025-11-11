@@ -13,7 +13,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // DB
-import { assertDbConnection } from "./config/db.js";
+import { assertDbConnection, hasRealDatabase } from "./config/db.js";
+import {
+  enableMockDataMode,
+  isMockDataEnabled,
+} from "./services/mockData.js";
 
 // Auth
 import { attachUserIfAny } from "./middleware/auth.js";
@@ -35,10 +39,13 @@ console.log("[BOOT]", {
   cwd: process.cwd(),
 });
 
-await assertDbConnection().catch((e) => {
-  console.error("[DB] Connection failed:", e.message);
-  process.exit(1);
-});
+if (!isMockDataEnabled()) {
+  await assertDbConnection().catch((e) => {
+    console.error("[DB] Connection failed:", e.message);
+    const reason = hasRealDatabase ? e.message : "configuration manquante";
+    enableMockDataMode(reason);
+  });
+}
 
 const app = express();
 app.set("trust proxy", 1);

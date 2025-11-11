@@ -1,4 +1,5 @@
 import { pool } from "../config/db.js";
+import { isMockDataEnabled, mockCompaniesRepo } from "../services/mockData.js";
 
 function normalizeName(name) {
   return String(name ?? "").trim();
@@ -8,6 +9,9 @@ export const Company = {
   async findByNameInsensitive(name) {
     const normalized = normalizeName(name);
     if (!normalized) return null;
+    if (isMockDataEnabled()) {
+      return mockCompaniesRepo.findByNameInsensitive(normalized);
+    }
     const [rows] = await pool.query(
       "SELECT company_id, company_name FROM companies WHERE LOWER(company_name) = LOWER(?) LIMIT 1",
       [normalized]
@@ -18,6 +22,9 @@ export const Company = {
   async create({ name }) {
     const normalized = normalizeName(name);
     if (!normalized) throw new Error("company_name_required");
+    if (isMockDataEnabled()) {
+      return mockCompaniesRepo.create({ name: normalized });
+    }
     const [res] = await pool.query(
       "INSERT INTO companies (company_name, created_at) VALUES (?, NOW())",
       [normalized]
@@ -26,6 +33,9 @@ export const Company = {
   },
 
   async ensureByName(name) {
+    if (isMockDataEnabled()) {
+      return mockCompaniesRepo.ensureByName(name);
+    }
     const existing = await this.findByNameInsensitive(name);
     if (existing) return existing;
     return this.create({ name });
@@ -33,6 +43,9 @@ export const Company = {
 
   async findById(id) {
     if (!id) return null;
+    if (isMockDataEnabled()) {
+      return mockCompaniesRepo.findById(id);
+    }
     const [rows] = await pool.query(
       `
         SELECT
@@ -55,6 +68,9 @@ export const Company = {
   },
 
   async attachToUser(personId, companyId) {
+    if (isMockDataEnabled()) {
+      return mockCompaniesRepo.attachToUser(personId, companyId);
+    }
     await pool.query("UPDATE people SET company_id = ? WHERE person_id = ?", [
       companyId,
       personId,
@@ -62,6 +78,9 @@ export const Company = {
   },
 
   async findByUserId(personId) {
+    if (isMockDataEnabled()) {
+      return mockCompaniesRepo.findByUserId(personId);
+    }
     const [rows] = await pool.query(
       `SELECT c.company_id, c.company_name
          FROM people p
@@ -77,6 +96,9 @@ export const Company = {
     const normalized = normalizeName(name);
     if (!companyId) throw new Error("company_id_required");
     if (!normalized) throw new Error("company_name_required");
+    if (isMockDataEnabled()) {
+      return mockCompaniesRepo.updateName(companyId, normalized);
+    }
     await pool.query(
       "UPDATE companies SET company_name = ? WHERE company_id = ?",
       [normalized, companyId]
@@ -85,6 +107,9 @@ export const Company = {
   },
 
   async listIndustries() {
+    if (isMockDataEnabled()) {
+      return mockCompaniesRepo.listIndustries();
+    }
     const rows = await pool.query(
       `
         SELECT DISTINCT industry
@@ -99,6 +124,9 @@ export const Company = {
   },
 
   async listWithActiveAds({ industry = null } = {}) {
+    if (isMockDataEnabled()) {
+      return mockCompaniesRepo.listWithActiveAds({ industry });
+    }
     const filters = [];
     const params = [];
 

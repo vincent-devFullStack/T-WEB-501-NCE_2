@@ -1,5 +1,9 @@
 // src/models/Application.js
 import { pool } from "../config/db.js";
+import {
+  isMockDataEnabled,
+  mockApplicationsRepo,
+} from "../services/mockData.js";
 
 function mapApplication(row) {
   if (!row) return null;
@@ -43,6 +47,10 @@ function buildSet(data) {
 
 export const Application = {
   async findById(id) {
+    if (isMockDataEnabled()) {
+      const row = await mockApplicationsRepo.findById(id);
+      return mapApplication(row);
+    }
     const [rows] = await pool.query(
       "SELECT * FROM applications WHERE application_id = ? LIMIT 1",
       [id]
@@ -51,6 +59,9 @@ export const Application = {
   },
 
   async listByAd(adId, { limit = 50, offset = 0 } = {}) {
+    if (isMockDataEnabled()) {
+      return mockApplicationsRepo.listByAd(adId, { limit, offset });
+    }
     const [rows] = await pool.query(
       `SELECT *
        FROM applications
@@ -63,6 +74,9 @@ export const Application = {
   },
 
   async listByPerson(personId, { limit = 50, offset = 0 } = {}) {
+    if (isMockDataEnabled()) {
+      return mockApplicationsRepo.listByPerson(personId, { limit, offset });
+    }
     const [rows] = await pool.query(
       `SELECT *
        FROM applications
@@ -82,6 +96,17 @@ export const Application = {
     coverLetter = null,
     notes = null,
   }) {
+    if (isMockDataEnabled()) {
+      const row = await mockApplicationsRepo.create({
+        adId,
+        personId,
+        status,
+        cvPath,
+        coverLetter,
+        notes,
+      });
+      return mapApplication(row);
+    }
     const [result] = await pool.query(
       `INSERT INTO applications (ad_id, person_id, status, cv_path, cover_letter, notes)
        VALUES (?, ?, ?, ?, ?, ?)`,
@@ -93,6 +118,17 @@ export const Application = {
   async update(id, data) {
     const { clause, values } = buildSet(data);
     if (!clause) return this.findById(id);
+    if (isMockDataEnabled()) {
+      const columns = clause
+        .split(",")
+        .map((chunk) => chunk.trim().split(" = ")[0]);
+      const updates = {};
+      columns.forEach((column, index) => {
+        updates[column] = values[index];
+      });
+      const row = await mockApplicationsRepo.update(id, updates);
+      return mapApplication(row);
+    }
     await pool.query(
       `UPDATE applications SET ${clause} WHERE application_id = ?`,
       [...values, id]
@@ -101,6 +137,9 @@ export const Application = {
   },
 
   async remove(id) {
+    if (isMockDataEnabled()) {
+      return mockApplicationsRepo.remove(id);
+    }
     const [result] = await pool.query(
       "DELETE FROM applications WHERE application_id = ?",
       [id]
@@ -112,6 +151,13 @@ export const Application = {
     personId,
     { statuses = null, limit = null, offset = 0 } = {}
   ) {
+    if (isMockDataEnabled()) {
+      return mockApplicationsRepo.listWithAdDetailsByPerson(personId, {
+        statuses,
+        limit,
+        offset,
+      });
+    }
     const params = [personId];
     let statusClause = "";
     if (Array.isArray(statuses) && statuses.length) {
@@ -156,6 +202,9 @@ export const Application = {
   },
 
   async countByStatusForPerson(personId) {
+    if (isMockDataEnabled()) {
+      return mockApplicationsRepo.countByStatusForPerson(personId);
+    }
     const [rows] = await pool.query(
       `SELECT status, COUNT(*) AS count
        FROM applications
@@ -170,6 +219,10 @@ export const Application = {
   },
 
   async findByAdAndPerson(adId, personId) {
+    if (isMockDataEnabled()) {
+      const row = await mockApplicationsRepo.findByAdAndPerson(adId, personId);
+      return mapApplication(row);
+    }
     const [rows] = await pool.query(
       `SELECT * FROM applications WHERE ad_id = ? AND person_id = ? LIMIT 1`,
       [adId, personId]
@@ -178,6 +231,9 @@ export const Application = {
   },
 
   async hasNonRefusedForPerson(adId, personId) {
+    if (isMockDataEnabled()) {
+      return mockApplicationsRepo.hasNonRefusedForPerson(adId, personId);
+    }
     const [rows] = await pool.query(
       `
         SELECT application_id
@@ -191,6 +247,14 @@ export const Application = {
   },
 
   async createOrReapply({ adId, personId, cvPath = null, coverLetter = null }) {
+    if (isMockDataEnabled()) {
+      return mockApplicationsRepo.createOrReapply({
+        adId,
+        personId,
+        cvPath,
+        coverLetter,
+      });
+    }
     const existing = await this.findByAdAndPerson(adId, personId);
     if (existing && existing.status !== "refuse") {
       return { status: "exists", application: existing };
@@ -221,6 +285,9 @@ export const Application = {
   },
 
   async listWithCandidateByAd(adId) {
+    if (isMockDataEnabled()) {
+      return mockApplicationsRepo.listWithCandidateByAd(adId);
+    }
     const [rows] = await pool.query(
       `
         SELECT
@@ -240,6 +307,12 @@ export const Application = {
   },
 
   async ensureBelongsToRecruiter(applicationId, recruiterId) {
+    if (isMockDataEnabled()) {
+      return mockApplicationsRepo.ensureBelongsToRecruiter(
+        applicationId,
+        recruiterId
+      );
+    }
     const [rows] = await pool.query(
       `
         SELECT
@@ -257,6 +330,13 @@ export const Application = {
   },
 
   async updateStatus(applicationId, status) {
+    if (isMockDataEnabled()) {
+      const row = await mockApplicationsRepo.updateStatus(
+        applicationId,
+        status
+      );
+      return mapApplication(row);
+    }
     await pool.query(
       "UPDATE applications SET status = ? WHERE application_id = ?",
       [status, applicationId]
@@ -270,6 +350,14 @@ export const Application = {
       recruiterId
     );
     if (!ownership) return null;
+    if (isMockDataEnabled()) {
+      const row = await mockApplicationsRepo.updateStatusForRecruiter(
+        applicationId,
+        recruiterId,
+        status
+      );
+      return mapApplication(row);
+    }
     await pool.query(
       "UPDATE applications SET status = ? WHERE application_id = ?",
       [status, applicationId]
@@ -278,6 +366,9 @@ export const Application = {
   },
 
   async countNewForRecruiter(recruiterId) {
+    if (isMockDataEnabled()) {
+      return mockApplicationsRepo.countNewForRecruiter(recruiterId);
+    }
     const [[result]] = await pool.query(
       `
         SELECT COUNT(*) AS count
@@ -291,6 +382,9 @@ export const Application = {
   },
 
   async countNewForAd(adId, recruiterId = null) {
+    if (isMockDataEnabled()) {
+      return mockApplicationsRepo.countNewForAd(adId, recruiterId);
+    }
     const params = [adId];
     let ownershipClause = "";
     if (recruiterId) {

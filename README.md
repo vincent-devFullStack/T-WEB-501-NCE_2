@@ -10,6 +10,21 @@ Vous trouverez ci‑dessous un récapitulatif des fonctionnalités et la marche 
 - **Front-end** : HTML/CSS/JS vanilla servi depuis `src/public`.
 - **API** : routes REST sous `/api/*`, incluant `/api/admin/*` pour le CRUD administrateur.
 
+### Mode dégradé “mock”
+
+Si MySQL n’est pas disponible (variables `DB_*` manquantes ou connexion impossible), le serveur poursuit son démarrage en **mode mock** :
+
+- Jeu de **10 annonces actives**, 5 entreprises et **10 comptes** (candidats, recruteurs, admin) chargés depuis `src/services/mockData.js`.
+- Une dizaine de candidatures reliées aux annonces afin d’alimenter le dashboard et les pages `/ads` ou `/mes-candidatures`.
+- Les routes existantes continuent de fonctionner (lecture/écriture) grâce à un faux stockage en mémoire.
+- Pour forcer ce mode hors-ligne, exportez `FORCE_MOCK_DATA=true` avant `npm run dev`.
+
+Identifiants utiles (mot de passe `password`) :
+
+- Candidat : `alice.martin@example.com`
+- Recruteur : `hugo.lambert@technova.fr`
+- Admin : `admin@jobboard.local`
+
 ### Installation
 
 ```bash

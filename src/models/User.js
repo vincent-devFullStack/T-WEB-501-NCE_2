@@ -1,5 +1,6 @@
 // src/models/User.js
 import { pool } from "../config/db.js";
+import { isMockDataEnabled, mockUsersRepo } from "../services/mockData.js";
 
 /** Map DB row -> JS object (camelCase) */
 function mapUser(r) {
@@ -68,6 +69,10 @@ function buildSet(data) {
 
 export const User = {
   async findById(id) {
+    if (isMockDataEnabled()) {
+      const row = await mockUsersRepo.findById(id);
+      return mapUser(row);
+    }
     const [rows] = await pool.query(
       "SELECT * FROM people WHERE person_id = ? LIMIT 1",
       [id]
@@ -76,6 +81,10 @@ export const User = {
   },
 
   async findByEmail(email) {
+    if (isMockDataEnabled()) {
+      const row = await mockUsersRepo.findByEmail(email);
+      return mapUser(row);
+    }
     const [rows] = await pool.query(
       "SELECT * FROM people WHERE email = ? LIMIT 1",
       [email]
@@ -94,6 +103,16 @@ export const User = {
     if (search) {
       where.push("(first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)");
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    }
+
+    if (isMockDataEnabled()) {
+      const { items, total } = await mockUsersRepo.list({
+        limit,
+        offset,
+        role,
+        search,
+      });
+      return { items: items.map(mapUser), total };
     }
 
     const sql = `
@@ -123,10 +142,26 @@ export const User = {
     companyId = null,
     position = null,
   }) {
+    if (isMockDataEnabled()) {
+      const row = await mockUsersRepo.create({
+        firstName,
+        lastName,
+        email,
+        passwordHash,
+        phone,
+        linkedinUrl,
+        role,
+        isActive,
+        companyId,
+        position,
+      });
+      return mapUser(row);
+    }
+
     const [r] = await pool.query(
       `INSERT INTO people
        (first_name, last_name, email, password_hash, phone, linkedin_url, person_type, is_active, company_id, position)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         firstName,
         lastName,
@@ -146,6 +181,17 @@ export const User = {
   async update(id, data) {
     const { clause, values } = buildSet(data);
     if (!clause) return this.findById(id);
+    if (isMockDataEnabled()) {
+      const columns = clause
+        .split(",")
+        .map((chunk) => chunk.trim().split(" = ")[0]);
+      const updates = {};
+      columns.forEach((column, index) => {
+        updates[column] = values[index];
+      });
+      const row = await mockUsersRepo.update(id, updates);
+      return mapUser(row);
+    }
     await pool.query(`UPDATE people SET ${clause} WHERE person_id = ?`, [
       ...values,
       id,
@@ -154,6 +200,10 @@ export const User = {
   },
 
   async setPasswordHash(id, passwordHash) {
+    if (isMockDataEnabled()) {
+      const row = await mockUsersRepo.setPasswordHash(id, passwordHash);
+      return mapUser(row);
+    }
     await pool.query(
       "UPDATE people SET password_hash = ? WHERE person_id = ?",
       [passwordHash, id]
@@ -162,6 +212,9 @@ export const User = {
   },
 
   async remove(id) {
+    if (isMockDataEnabled()) {
+      return mockUsersRepo.remove(id);
+    }
     const [r] = await pool.query("DELETE FROM people WHERE person_id = ?", [
       id,
     ]);
@@ -169,6 +222,9 @@ export const User = {
   },
 
   async fetchProfileRow(personId) {
+    if (isMockDataEnabled()) {
+      return mockUsersRepo.fetchProfileRow(personId);
+    }
     const [rows] = await pool.query(
       `
         SELECT
@@ -202,6 +258,9 @@ export const User = {
   },
 
   async getRecruiterContext(personId) {
+    if (isMockDataEnabled()) {
+      return mockUsersRepo.getRecruiterContext(personId);
+    }
     const [rows] = await pool.query(
       `
         SELECT
@@ -222,6 +281,9 @@ export const User = {
 
   async ensureCandidateByEmail({ email, fullName = "", phone = null }) {
     if (!email) throw new Error("email_required");
+    if (isMockDataEnabled()) {
+      return mockUsersRepo.ensureCandidateByEmail({ email, fullName, phone });
+    }
     const normalizedEmail = String(email).trim().toLowerCase();
     const existing = await this.findByEmail(normalizedEmail);
     if (existing) {

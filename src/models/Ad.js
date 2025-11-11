@@ -1,5 +1,6 @@
 // src/models/Ad.js
 import { pool } from "../config/db.js";
+import { isMockDataEnabled, mockAdsRepo } from "../services/mockData.js";
 
 function mapAd(r) {
   if (!r) return null;
@@ -53,6 +54,10 @@ function buildSet(data) {
 
 export const Ad = {
   async findById(id) {
+    if (isMockDataEnabled()) {
+      const row = await mockAdsRepo.findById(id);
+      return mapAd(row);
+    }
     const [rows] = await pool.query(
       "SELECT * FROM advertisements WHERE ad_id = ? LIMIT 1",
       [id]
@@ -73,6 +78,16 @@ export const Ad = {
         "(job_title LIKE ? OR company_name LIKE ? OR location LIKE ?)"
       );
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    }
+
+    if (isMockDataEnabled()) {
+      const { items, total } = await mockAdsRepo.list({
+        limit,
+        offset,
+        status,
+        search,
+      });
+      return { items: items.map(mapAd), total };
     }
 
     const sql = `
@@ -107,6 +122,25 @@ export const Ad = {
       creatorId = null,
     } = data;
 
+    if (isMockDataEnabled()) {
+      const row = await mockAdsRepo.create({
+        company_id: companyId,
+        company_name: companyName,
+        job_title: jobTitle,
+        job_description: jobDescription,
+        requirements,
+        location,
+        contract_type: contractType,
+        salary_min: salaryMin,
+        salary_max: salaryMax,
+        currency,
+        deadline_date: deadlineDate,
+        status,
+        creator_id: creatorId,
+      });
+      return mapAd(row);
+    }
+
     const [r] = await pool.query(
       `INSERT INTO advertisements
          (job_title, company_name, job_description, requirements, location, contract_type,
@@ -134,6 +168,17 @@ export const Ad = {
   async update(id, data) {
     const { clause, values } = buildSet(data);
     if (!clause) return this.findById(id);
+    if (isMockDataEnabled()) {
+      const columns = clause
+        .split(",")
+        .map((chunk) => chunk.trim().split(" = ")[0]);
+      const updates = {};
+      columns.forEach((column, index) => {
+        updates[column] = values[index];
+      });
+      const row = await mockAdsRepo.update(id, updates);
+      return mapAd(row);
+    }
     await pool.query(`UPDATE advertisements SET ${clause} WHERE ad_id = ?`, [
       ...values,
       id,
@@ -142,6 +187,9 @@ export const Ad = {
   },
 
   async remove(id) {
+    if (isMockDataEnabled()) {
+      return mockAdsRepo.remove(id);
+    }
     const [r] = await pool.query("DELETE FROM advertisements WHERE ad_id = ?", [
       id,
     ]);
@@ -154,6 +202,14 @@ export const Ad = {
     offset = 0,
     withTotal = false,
   } = {}) {
+    if (isMockDataEnabled()) {
+      return mockAdsRepo.listPublicActive({
+        companyId,
+        limit,
+        offset,
+        withTotal,
+      });
+    }
     const where = ["a.status = 'active'"];
     const params = [];
     if (companyId) {
@@ -208,6 +264,9 @@ export const Ad = {
   },
 
   async countPublicActive({ companyId = null } = {}) {
+    if (isMockDataEnabled()) {
+      return mockAdsRepo.countPublicActive({ companyId });
+    }
     const where = ["status = 'active'"];
     const params = [];
     if (companyId) {
@@ -224,6 +283,9 @@ export const Ad = {
   },
 
   async listPublicWithRelations() {
+    if (isMockDataEnabled()) {
+      return mockAdsRepo.listPublicWithRelations();
+    }
     const [rows] = await pool.query(
       `
       SELECT 
@@ -241,6 +303,9 @@ export const Ad = {
   },
 
   async findPublicById(id) {
+    if (isMockDataEnabled()) {
+      return mockAdsRepo.findPublicById(id);
+    }
     const [rows] = await pool.query(
       `
         SELECT
@@ -276,6 +341,9 @@ export const Ad = {
   },
 
   async findActiveById(adId) {
+    if (isMockDataEnabled()) {
+      return mockAdsRepo.findActiveById(adId);
+    }
     const [rows] = await pool.query(
       `
         SELECT ad_id, company_id, contact_person_id, status
@@ -289,6 +357,9 @@ export const Ad = {
   },
 
   async ensureOwnership(adId, recruiterId) {
+    if (isMockDataEnabled()) {
+      return mockAdsRepo.ensureOwnership(adId, recruiterId);
+    }
     const [rows] = await pool.query(
       `
         SELECT
@@ -307,6 +378,9 @@ export const Ad = {
   },
 
   async listForRecruiter(recruiterId) {
+    if (isMockDataEnabled()) {
+      return mockAdsRepo.listForRecruiter(recruiterId);
+    }
     const [rows] = await pool.query(
       `
         SELECT
@@ -323,6 +397,9 @@ export const Ad = {
   },
 
   async findForRecruiter(adId, recruiterId) {
+    if (isMockDataEnabled()) {
+      return mockAdsRepo.findForRecruiter(adId, recruiterId);
+    }
     const [rows] = await pool.query(
       `
         SELECT
@@ -378,6 +455,14 @@ export const Ad = {
       values.push(value);
     }
 
+    if (isMockDataEnabled()) {
+      return mockAdsRepo.createForRecruiter({
+        recruiterId,
+        companyId,
+        data,
+      });
+    }
+
     const placeholders = columns.map(() => "?").join(", ");
     const sql = `
       INSERT INTO advertisements (${columns.join(", ")})
@@ -390,6 +475,9 @@ export const Ad = {
   async updateForRecruiter(adId, recruiterId, updates) {
     const ownership = await this.ensureOwnership(adId, recruiterId);
     if (!ownership) return null;
+    if (isMockDataEnabled()) {
+      return mockAdsRepo.updateForRecruiter(adId, recruiterId, updates);
+    }
 
     const allowedMap = {
       job_title: (value) => (value ? String(value).trim() : null),
@@ -441,6 +529,9 @@ export const Ad = {
   async removeForRecruiter(adId, recruiterId) {
     const ownership = await this.ensureOwnership(adId, recruiterId);
     if (!ownership) return false;
+    if (isMockDataEnabled()) {
+      return mockAdsRepo.removeForRecruiter(adId, recruiterId);
+    }
     await pool.query("DELETE FROM advertisements WHERE ad_id = ?", [adId]);
     return true;
   },
@@ -448,6 +539,9 @@ export const Ad = {
   async updateStatusForRecruiter(adId, recruiterId, status) {
     const ownership = await this.ensureOwnership(adId, recruiterId);
     if (!ownership) return null;
+    if (isMockDataEnabled()) {
+      return mockAdsRepo.updateStatusForRecruiter(adId, recruiterId, status);
+    }
     await pool.query(
       "UPDATE advertisements SET status = ? WHERE ad_id = ?",
       [status, adId]
